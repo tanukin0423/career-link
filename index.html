@@ -1,0 +1,2086 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>先生の厳選キャリア掲示板 | Career Support Portal</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="https://cdn.jsdelivr.net/npm/jsqr/dist/jsQR.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&family=Noto+Sans+JP:wght@400;700;900&display=swap');
+        body { font-family: 'Inter', 'Noto Sans JP', sans-serif; scroll-behavior: smooth; }
+        .hidden { display: none !important; }
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: #f1f5f9; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+        .cate-it     { background-color:#dbeafe; color:#1e40af; border:1px solid #bfdbfe; }
+        .cate-med    { background-color:#dcfce7; color:#166534; border:1px solid #bbf7d0; }
+        .cate-shosha { background-color:#ffedd5; color:#9a3412; border:1px solid #fed7aa; }
+        .cate-fin    { background-color:#f3e8ff; color:#6b21a8; border:1px solid #e9d5ff; }
+        .cate-other  { background-color:#f1f5f9; color:#475569; border:1px solid #e2e8f0; }
+        .teacher-bubble { position:relative; background:#fff; border:2px solid #4f46e5; }
+        .teacher-bubble::after {
+            content:''; position:absolute; bottom:-12px; left:30px;
+            border-width:12px 12px 0; border-style:solid; border-color:#4f46e5 transparent;
+        }
+        #conn-status { position:fixed; bottom:20px; right:20px; z-index:9999; display:none; }
+        .modal-overlay {
+            position:fixed; inset:0; background:rgba(15,23,42,0.65);
+            backdrop-filter:blur(4px); z-index:500;
+            display:flex; align-items:center; justify-content:center; padding:16px;
+        }
+        .days-badge-urgent { background:#fee2e2; color:#991b1b; border:1px solid #fca5a5; }
+        .days-badge-soon   { background:#fef3c7; color:#92400e; border:1px solid #fde68a; }
+        .days-badge-ok     { background:#d1fae5; color:#065f46; border:1px solid #6ee7b7; }
+        .date-past   { color:#94a3b8; text-decoration:line-through; }
+        .date-today  { color:#dc2626; font-weight:900; }
+        .date-future { color:#1e40af; font-weight:700; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        .animate-spin { animation: spin 1s linear infinite; }
+    </style>
+</head>
+<body class="bg-slate-50 min-h-screen text-slate-900 flex flex-col">
+
+<!-- オフライン通知 -->
+<div id="conn-status" class="bg-amber-600 text-white px-5 py-3 rounded-2xl text-xs font-bold shadow-2xl flex items-center gap-3 border-2 border-white/20">
+    <i data-lucide="database-zap" class="w-5 h-5"></i>
+    <div>
+        <p class="font-black">Firebase未接続</p>
+        <p class="opacity-80 text-[11px]">固定データで表示中。管理画面での変更は保存されません。</p>
+    </div>
+</div>
+
+<!-- ナビゲーション -->
+<nav class="bg-white/80 backdrop-blur-md sticky top-0 z-50 border-b border-slate-200 shadow-sm">
+    <div class="max-w-6xl mx-auto px-4 h-16 flex items-center justify-between">
+        <div class="flex items-center gap-3">
+            <div class="bg-indigo-600 p-2 rounded-xl text-white shadow-lg cursor-pointer" onclick="location.reload()">
+                <i data-lucide="trending-up" class="w-5 h-5"></i>
+            </div>
+            <div>
+                <span class="text-lg font-black text-indigo-900 leading-none block tracking-tight">Career Link</span>
+                <span class="text-[10px] text-slate-400 font-bold tracking-widest uppercase">2028 Graduation Support</span>
+            </div>
+        </div>
+        <div class="flex items-center gap-2 sm:gap-4">
+            <button id="nav-student" class="text-xs sm:text-sm font-bold text-indigo-600 px-4 py-2 rounded-full bg-indigo-50 border border-indigo-100 shadow-sm">学生用画面</button>
+            <button id="btn-show-login" class="text-xs sm:text-sm font-bold text-slate-400 hover:text-indigo-600 transition-colors flex items-center gap-1">
+                <i data-lucide="lock" class="w-4 h-4"></i> 管理
+            </button>
+        </div>
+    </div>
+</nav>
+
+<!-- ログインモーダル -->
+<div id="login-modal" class="modal-overlay hidden">
+    <div class="bg-white rounded-[32px] p-8 w-full max-w-sm shadow-2xl">
+        <div class="text-center mb-6">
+            <div class="w-16 h-16 bg-indigo-100 rounded-full flex items-center justify-center mx-auto mb-4 text-indigo-600">
+                <i data-lucide="shield-check" class="w-8 h-8"></i>
+            </div>
+            <h3 class="text-xl font-black text-slate-800">管理者ログイン</h3>
+            <p class="text-slate-400 text-sm mt-1">管理パスワードを入力してください</p>
+        </div>
+        <div class="space-y-4">
+            <input type="password" id="admin-pw"
+                class="w-full p-4 bg-slate-50 border border-slate-200 rounded-2xl outline-none focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 text-center text-lg tracking-widest"
+                placeholder="••••">
+            <div class="flex gap-3">
+                <button id="btn-login-cancel" class="flex-1 py-4 font-bold text-slate-400 hover:bg-slate-50 rounded-2xl">取消</button>
+                <button id="btn-login-submit" class="flex-1 py-4 bg-indigo-600 text-white font-black rounded-2xl hover:bg-indigo-700">認証</button>
+            </div>
+            <p id="login-error" class="text-red-500 text-xs text-center font-bold hidden">パスワードが正しくありません</p>
+        </div>
+    </div>
+</div>
+
+<!-- カメラQRスキャンモーダル（撮影→jsQR解析方式） -->
+<div id="camera-modal" class="modal-overlay hidden">
+    <div class="bg-white rounded-[32px] p-6 w-full max-w-sm shadow-2xl space-y-4">
+        <div class="flex items-center justify-between">
+            <h3 class="text-lg font-black text-slate-800 flex items-center gap-2">
+                <i data-lucide="camera" class="w-5 h-5 text-emerald-500"></i> QRコードを読み取る
+            </h3>
+            <button id="camera-close" class="text-slate-400 hover:text-slate-600 p-1">
+                <i data-lucide="x" class="w-5 h-5"></i>
+            </button>
+        </div>
+
+        <!-- 待機状態 -->
+        <div id="camera-step-shoot">
+            <div class="bg-emerald-50 border border-emerald-200 rounded-2xl p-5 text-center space-y-4">
+                <div class="text-5xl">📷</div>
+                <p class="text-sm font-black text-slate-700">カメラでQRコードを撮影してください</p>
+                <ol class="text-left text-xs text-slate-500 font-bold space-y-1 pl-2">
+                    <li>① 下のボタンをタップ</li>
+                    <li>② カメラが起動したらQRコードに向ける</li>
+                    <li>③ シャッターを押して撮影</li>
+                    <li>④ URLが自動で入力されます</li>
+                </ol>
+                <!-- ファイル選択（capture=environmentでカメラ起動） -->
+                <label class="block w-full bg-emerald-500 hover:bg-emerald-600 text-white font-black py-4 rounded-2xl text-sm cursor-pointer transition-all">
+                    <i data-lucide="camera" class="w-4 h-4 inline-block mr-1"></i> カメラを起動して撮影する
+                    <input type="file" id="camera-capture-input"
+                        accept="image/*" capture="environment" class="hidden">
+                </label>
+                <p class="text-[11px] text-slate-400">iPhoneはSafari、AndroidはChromeを推奨します</p>
+            </div>
+        </div>
+
+        <!-- 解析中 -->
+        <div id="camera-step-analyzing" class="hidden">
+            <div class="bg-slate-50 rounded-2xl p-6 text-center space-y-3">
+                <div class="w-8 h-8 border-4 border-indigo-500 border-t-transparent rounded-full animate-spin mx-auto"></div>
+                <p class="text-sm font-bold text-slate-600">QRコードを解析中...</p>
+            </div>
+        </div>
+
+        <!-- 成功 -->
+        <div id="camera-step-success" class="hidden space-y-3">
+            <div class="bg-emerald-50 border border-emerald-200 rounded-2xl p-4 space-y-2">
+                <p class="text-xs font-black text-emerald-700">✅ QRコードを読み取りました</p>
+                <p id="camera-result-url"
+                    class="text-xs text-slate-700 break-all font-mono bg-white rounded-xl p-2 border border-slate-200"></p>
+            </div>
+            <button id="camera-use-url"
+                class="w-full bg-emerald-500 text-white font-black py-4 rounded-2xl text-sm hover:bg-emerald-600 transition-all">
+                このURLをURL欄に入力する
+            </button>
+            <button id="camera-retry"
+                class="w-full bg-slate-100 text-slate-600 font-bold py-3 rounded-2xl text-sm hover:bg-slate-200 transition-all">
+                撮り直す
+            </button>
+        </div>
+
+        <!-- 失敗 -->
+        <div id="camera-step-error" class="hidden space-y-3">
+            <div class="bg-red-50 border border-red-200 rounded-2xl p-4 space-y-1">
+                <p class="text-xs font-black text-red-700">⚠ QRコードが読み取れませんでした</p>
+                <p class="text-[11px] text-red-500">QRコード全体が写るよう近づいて再撮影してください</p>
+            </div>
+            <button id="camera-retry2"
+                class="w-full bg-emerald-500 text-white font-black py-4 rounded-2xl text-sm hover:bg-emerald-600 transition-all">
+                もう一度撮影する
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- 編集モーダル -->
+<div id="edit-modal" class="modal-overlay hidden">
+    <div class="bg-white rounded-[32px] p-8 w-full max-w-lg shadow-2xl space-y-4 max-h-[90vh] overflow-y-auto">
+        <h3 class="text-xl font-black text-slate-800 flex items-center gap-2">
+            <i data-lucide="pencil" class="w-5 h-5 text-indigo-500"></i>
+            <span id="edit-modal-title">企業情報を編集</span>
+        </h3>
+        <input type="hidden" id="edit-doc-id">
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div class="sm:col-span-2">
+                <label class="text-xs font-black text-slate-400 uppercase tracking-widest mb-1 block">企業名 *</label>
+                <input type="text" id="edit-name" class="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:border-indigo-400 text-sm font-bold">
+            </div>
+            <div>
+                <label class="text-xs font-black text-slate-400 uppercase tracking-widest mb-1 block">業界</label>
+                <select id="edit-cate" class="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl outline-none text-sm font-bold text-slate-700">
+                    <option>IT・ソフトウェア</option><option>医療・福祉・介護</option>
+                    <option>商社・小売・外食</option><option>金融・建設・その他</option><option>その他</option>
+                </select>
+            </div>
+            <div>
+                <label class="text-xs font-black text-slate-400 uppercase tracking-widest mb-1 block">開催形式</label>
+                <input type="text" id="edit-method" placeholder="例：オンライン" class="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:border-indigo-400 text-sm">
+            </div>
+            <div class="sm:col-span-2">
+                <label class="text-xs font-black text-slate-400 uppercase tracking-widest mb-1 block">日程テキスト</label>
+                <input type="text" id="edit-dates" placeholder="例：4/15, 22, 28" class="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:border-indigo-400 text-sm">
+            </div>
+            <div class="sm:col-span-2">
+                <label class="text-xs font-black text-slate-400 uppercase tracking-widest mb-1 block">開催月（カンマ区切り）</label>
+                <input type="text" id="edit-months" placeholder="例：4,5" class="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:border-indigo-400 text-sm">
+            </div>
+            <div class="sm:col-span-2">
+                <label class="text-xs font-black text-slate-400 uppercase tracking-widest mb-1 block">先生コメント *</label>
+                <textarea id="edit-desc" rows="3" class="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl resize-none outline-none focus:border-indigo-400 text-sm"></textarea>
+            </div>
+            <!-- 🔵 HP用URL -->
+            <div class="sm:col-span-2">
+                <label class="text-xs font-black text-indigo-500 uppercase tracking-widest mb-1 block flex items-center gap-1.5">
+                    <span class="w-3 h-3 rounded-full bg-indigo-500 inline-block"></span> 公式HP URL（企業を知る・企業研究用）
+                </label>
+                <input type="url" id="edit-url-hp" placeholder="https://（企業公式サイト）" class="w-full p-3 bg-indigo-50 border border-indigo-200 rounded-xl outline-none focus:border-indigo-500 text-sm">
+            </div>
+            <!-- 🔵 HP用QR画像 -->
+            <div class="sm:col-span-2">
+                <label class="text-xs font-black text-indigo-400 uppercase tracking-widest mb-1 block">🔵 HP用QRコード画像（URLがない場合）</label>
+                <div class="flex items-center gap-3">
+                    <label class="flex-1 cursor-pointer">
+                        <div id="edit-qr-preview-hp" class="w-full p-3 bg-indigo-50 border-2 border-dashed border-indigo-200 rounded-xl text-center text-indigo-300 text-sm hover:border-indigo-400 transition-all">
+                            📷 HP用QR画像を選択（PNG・JPG）
+                        </div>
+                        <input type="file" id="edit-qr-input-hp" accept="image/*" class="hidden">
+                    </label>
+                    <button type="button" id="edit-qr-clear-hp" class="hidden text-xs text-red-400 font-bold px-3 py-2 rounded-xl hover:bg-red-50">削除</button>
+                </div>
+                <input type="hidden" id="edit-qr-data-hp">
+            </div>
+            <!-- 🟢 エントリー用URL -->
+            <div class="sm:col-span-2">
+                <label class="text-xs font-black text-emerald-600 uppercase tracking-widest mb-1 block flex items-center gap-1.5">
+                    <span class="w-3 h-3 rounded-full bg-emerald-500 inline-block"></span> エントリーURL（申し込む・マイナビ・LINE等）
+                </label>
+                <div class="flex gap-2 items-center mb-2">
+                    <p class="text-[11px] text-sky-500 font-bold flex-1">📱 カメラでQRを読み取るとURLを自動入力できます</p>
+                    <button type="button" id="edit-qr-camera-btn"
+                        class="flex items-center gap-1.5 bg-emerald-500 hover:bg-emerald-600 text-white text-xs font-black px-3 py-2 rounded-xl transition-all whitespace-nowrap">
+                        <i data-lucide="camera" class="w-4 h-4"></i> カメラでQRを読み取る
+                    </button>
+                </div>
+                <input type="url" id="edit-url" placeholder="https://（マイナビ・LINE・応募フォーム等）" class="w-full p-3 bg-emerald-50 border border-emerald-200 rounded-xl outline-none focus:border-emerald-500 text-sm">
+            </div>
+            <!-- 🟢 エントリー用QR画像 -->
+            <div class="sm:col-span-2">
+                <label class="text-xs font-black text-emerald-500 uppercase tracking-widest mb-1 block">🟢 エントリー用QRコード画像（URLがない場合）</label>
+                <div class="flex items-center gap-3">
+                    <label class="flex-1 cursor-pointer">
+                        <div id="edit-qr-preview" class="w-full p-3 bg-emerald-50 border-2 border-dashed border-emerald-200 rounded-xl text-center text-emerald-400 text-sm hover:border-emerald-400 transition-all">
+                            📷 エントリー用QR画像を選択（PNG・JPG）
+                        </div>
+                        <input type="file" id="edit-qr-input" accept="image/*" class="hidden">
+                    </label>
+                    <button type="button" id="edit-qr-clear" class="hidden text-xs text-red-400 font-bold px-3 py-2 rounded-xl hover:bg-red-50">削除</button>
+                </div>
+                <input type="hidden" id="edit-qr-data">
+            </div>
+            <div class="sm:col-span-2">
+                <label class="text-xs font-black text-slate-400 uppercase tracking-widest mb-1 block">掲載終了日（空欄＝無期限）</label>
+                <input type="date" id="edit-enddate" class="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:border-indigo-400 text-sm">
+                <p class="text-[11px] text-slate-400 mt-1">この日を過ぎると学生画面から自動で非表示になります</p>
+            </div>
+        </div>
+        <div class="flex gap-3 pt-2">
+            <button id="btn-edit-cancel" class="flex-1 py-3 font-bold text-slate-400 hover:bg-slate-50 rounded-2xl">キャンセル</button>
+            <button id="btn-edit-save" class="flex-1 py-3 bg-indigo-600 text-white font-black rounded-2xl hover:bg-indigo-700">保存する</button>
+        </div>
+    </div>
+</div>
+
+<!-- 学生画面 -->
+<main id="student-view" class="flex-grow max-w-6xl mx-auto w-full p-4 md:p-8 space-y-12">
+    <section class="text-center py-12 relative">
+        <div class="absolute top-0 left-1/2 -translate-x-1/2 w-80 h-80 bg-indigo-500/5 blur-[100px] rounded-full -z-10"></div>
+        <h2 class="text-4xl md:text-6xl font-black text-slate-800 tracking-tighter mb-4 leading-tight">
+                キャリア支援課に最近来た<span class="text-indigo-600">求人情報</span>
+        </h2>
+        <p class="text-slate-500 max-w-2xl mx-auto text-base md:text-lg italic font-medium">
+            「興味がわいたら、まずはエントリーして話をきいてみよう。」
+        </p>
+    </section>
+
+    <!-- 今週の説明会バナー -->
+    <div id="this-week-banner"></div>
+
+    <!-- 厳選ピックアップ -->
+    <section class="space-y-8">
+        <div class="flex items-center gap-4">
+            <div class="h-px bg-slate-200 flex-grow"></div>
+            <h3 class="text-xs font-black text-slate-400 uppercase tracking-[0.3em] whitespace-nowrap flex items-center gap-2">
+                <i data-lucide="sparkles" class="w-4 h-4 text-amber-400 fill-amber-400"></i> Teacher's Insight
+            </h3>
+            <div class="h-px bg-slate-200 flex-grow"></div>
+        </div>
+        <div id="curated-container" class="grid grid-cols-1 md:grid-cols-2 gap-8"></div>
+    </section>
+
+    <!-- 全件検索 -->
+    <section class="space-y-8 pt-4">
+        <div class="bg-white p-6 md:p-10 rounded-[48px] border border-slate-200 shadow-sm space-y-6">
+            <div>
+                <h3 class="text-2xl font-black text-slate-800 flex items-center gap-2">
+                    <i data-lucide="search" class="w-6 h-6 text-indigo-400"></i> 企業説明会・イベント検索
+                </h3>
+                <p class="text-sm text-slate-400 font-medium mt-1">条件を指定して絞り込めます</p>
+            </div>
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                <div class="relative">
+                    <i data-lucide="search" class="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400"></i>
+                    <input type="text" id="bulk-search" placeholder="企業名で検索..."
+                        class="w-full pl-11 pr-4 py-4 bg-slate-50 border border-slate-200 rounded-2xl text-sm outline-none focus:border-indigo-400">
+                </div>
+                <div class="relative">
+                    <i data-lucide="filter" class="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400"></i>
+                    <select id="cateFilter" class="w-full pl-11 pr-4 py-4 bg-slate-50 border border-slate-200 rounded-2xl text-sm font-bold appearance-none outline-none">
+                        <option value="all">すべての業界</option>
+                        <option value="IT・ソフトウェア">IT・ソフトウェア</option>
+                        <option value="医療・福祉・介護">医療・福祉・介護</option>
+                        <option value="商社・小売・外食">商社・小売・外食</option>
+                        <option value="金融・建設・その他">金融・建設・その他</option>
+                        <option value="その他">その他</option>
+                    </select>
+                </div>
+                <div class="relative">
+                    <i data-lucide="calendar" class="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400"></i>
+                    <select id="monthFilter" class="w-full pl-11 pr-4 py-4 bg-slate-50 border border-slate-200 rounded-2xl text-sm font-bold appearance-none outline-none">
+                        <option value="all">すべての月</option>
+                    </select>
+                </div>
+                <div class="relative">
+                    <i data-lucide="map-pin" class="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400"></i>
+                    <select id="methodFilter" class="w-full pl-11 pr-4 py-4 bg-slate-50 border border-slate-200 rounded-2xl text-sm font-bold appearance-none outline-none">
+                        <option value="all">すべての形式</option>
+                        <option value="オンライン">オンラインのみ</option>
+                        <option value="対面">対面を含む</option>
+                    </select>
+                </div>
+            </div>
+            <div class="flex items-center justify-between text-xs font-bold text-slate-400 px-2 border-t pt-4 border-slate-100">
+                <div id="results-count">表示中: -- 件</div>
+                <div class="flex items-center gap-3">
+                    <button id="sort-date" class="text-indigo-600 flex items-center gap-1 hover:text-indigo-800 transition-colors">
+                        <i data-lucide="calendar" class="w-3 h-3"></i>
+                        <span id="sort-date-label">開催日が近い順</span>
+                    </button>
+                    <span class="text-slate-300">|</span>
+                    <button id="sort-cate" class="text-slate-400 flex items-center gap-1 hover:text-indigo-600 transition-colors">
+                        <i data-lucide="layers" class="w-3 h-3"></i> 業界順
+                    </button>
+                </div>
+            </div>
+            <!-- 凡例 -->
+            <div class="flex flex-wrap items-center gap-3 px-2 pt-2 text-[11px] font-bold text-slate-400">
+                <span class="text-slate-300 font-black">「詳細・申込」ボタン・日付カードの色：</span>
+                <span class="flex items-center gap-1.5">
+                    <span class="inline-block w-3 h-3 rounded-full bg-red-500"></span>
+                    今日開催
+                </span>
+                <span class="flex items-center gap-1.5">
+                    <span class="inline-block w-3 h-3 rounded-full bg-orange-500"></span>
+                    3日以内
+                </span>
+                <span class="flex items-center gap-1.5">
+                    <span class="inline-block w-3 h-3 rounded-full bg-amber-500"></span>
+                    7日以内
+                </span>
+                <span class="flex items-center gap-1.5">
+                    <span class="inline-block w-3 h-3 rounded-full bg-indigo-600"></span>
+                    14日以内
+                </span>
+                <span class="flex items-center gap-1.5">
+                    <span class="inline-block w-3 h-3 rounded-full bg-slate-300"></span>
+                    それ以降・日程未定
+                </span>
+            </div>
+        </div>
+        <div id="bulk-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"></div>
+        <div id="no-results" class="hidden py-32 text-center bg-white rounded-[40px] border border-slate-200">
+            <i data-lucide="search-x" class="w-12 h-12 text-slate-200 mx-auto mb-4"></i>
+            <p class="text-slate-400 font-bold">条件に合う企業は見つかりませんでした。</p>
+        </div>
+    </section>
+</main>
+
+<!-- 管理画面 -->
+<main id="admin-view" class="max-w-5xl mx-auto w-full p-4 md:p-8 hidden space-y-12">
+    <div class="flex items-center justify-between">
+        <h2 class="text-3xl font-black text-slate-800 flex items-center gap-3">
+            <i data-lucide="shield-check" class="text-indigo-600"></i> 管理用パネル
+        </h2>
+        <button id="btn-logout" class="text-sm text-red-500 font-bold px-6 py-3 rounded-2xl hover:bg-red-50 flex items-center gap-2">
+            <i data-lucide="log-out" class="w-4 h-4"></i> ログアウト
+        </button>
+    </div>
+
+    <!-- AI連携（2段階方式） -->
+    <div class="bg-slate-900 rounded-[48px] p-8 md:p-10 shadow-2xl text-white relative overflow-hidden">
+        <div class="absolute top-0 right-0 w-64 h-64 bg-indigo-500/10 blur-[80px] rounded-full -mr-20 -mt-20"></div>
+        <div class="relative z-10">
+            <div class="flex items-center gap-3 mb-2">
+                <div class="bg-indigo-600 p-2 rounded-xl"><i data-lucide="brain-circuit" class="w-6 h-6"></i></div>
+                <h3 class="text-xl font-bold text-indigo-100 tracking-tighter">企業データの追加（AI活用・2段階方式）</h3>
+            </div>
+            <p class="text-indigo-400 text-xs mb-8 ml-1">PDFの求人ポスターから企業データを取り出して登録します。</p>
+
+            <!-- STEP 1 -->
+            <div class="mb-6">
+                <div class="flex items-center gap-3 mb-4">
+                    <div class="w-8 h-8 rounded-full bg-indigo-600 flex items-center justify-center font-black text-white text-sm shrink-0">1</div>
+                    <p class="font-black text-indigo-100 text-base">PDFからデータを取り出す</p>
+                </div>
+                <div class="bg-white/5 rounded-[28px] p-6 border border-white/10 space-y-5">
+                    <!-- 説明 -->
+                    <div class="bg-amber-500/10 border border-amber-400/30 rounded-2xl p-4">
+                        <p class="text-amber-200 text-xs font-bold leading-relaxed">
+                            📌 まず使うAIを選んでください。<br>
+                            Claude・Gemini どちらも無料で使えます。<br>
+                            PDFをアップロードして指示文を貼り付けるだけで自動的にデータを取り出してくれます。
+                        </p>
+                    </div>
+                    <!-- AI選択ボタン -->
+                    <div class="grid grid-cols-2 gap-3">
+                        <a href="https://claude.ai" target="_blank"
+                            class="flex items-center justify-center gap-2 bg-indigo-600 hover:bg-indigo-500 text-white font-black py-4 rounded-2xl transition-all text-sm">
+                            <i data-lucide="external-link" class="w-4 h-4"></i> Claude.ai を開く
+                        </a>
+                        <a href="https://gemini.google.com" target="_blank"
+                            class="flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-500 text-white font-black py-4 rounded-2xl transition-all text-sm">
+                            <i data-lucide="external-link" class="w-4 h-4"></i> Gemini を開く
+                        </a>
+                    </div>
+                    <!-- 指示文 -->
+                    <div>
+                        <p class="text-indigo-300 text-xs font-black mb-2 uppercase tracking-widest">② 下の指示文をコピーしてAIに貼り付ける</p>
+                        <div class="bg-black/30 rounded-2xl p-4 font-mono text-[11px] text-indigo-200 leading-relaxed mb-3">
+                            このPDFを解析して、企業の説明会情報をJSON配列形式のみで出力してください。<br>
+                            説明文は不要です。JSON配列だけ出力してください。<br><br>
+                            項目：<br>
+                            name（企業名）<br>
+                            cate（業界：IT・ソフトウェア / 医療・福祉・介護 / 商社・小売・外食 / 金融・建設・その他 / その他）<br>
+                            method（開催形式：オンライン・対面・WEB等）<br>
+                            dates（日程テキスト　例：4/15, 22, 28）<br>
+                            months（開催月の数字配列　例：[4,5]）<br>
+                            desc（先生目線での紹介文　100字以内）<br>
+                            urlHp（企業名でGoogle検索して公式採用ページのURLを調べて入力。マイナビ等の就職サイトは除く。なければ ""）<br>
+                            url（マイナビ・リクナビ・LINE等のエントリーURL。PDFに記載があれば入力。なければ ""）<br>
+                            hasQr（QRコードが印刷されているか true/false）<br>
+                            qrUrl（QRコードのURL。LINEの場合は https://line.me/... 形式。読み取れなければ空文字 ""）
+                        </div>
+                        <div class="bg-sky-500/10 border border-sky-400/30 rounded-2xl p-3 mb-3">
+                            <p class="text-sky-200 text-[11px] font-bold leading-relaxed">
+                                💡 LINE QRコードのURLはAIが読み取れない場合があります。<br>
+                                その場合は登録後、スマホでQRを読んで <strong>qrUrl欄</strong> に追加してください。
+                            </p>
+                        </div>
+                        <button id="btn-copy-prompt"
+                            class="w-full bg-indigo-500 hover:bg-indigo-400 py-3 rounded-2xl text-xs font-black flex items-center justify-center gap-2 transition-all">
+                            <i data-lucide="copy" class="w-4 h-4"></i>
+                            <span id="btn-copy-text">📋 指示文をコピーする</span>
+                        </button>
+                    </div>
+                    <!-- 手順説明 -->
+                    <div class="space-y-2">
+                        <p class="text-indigo-300 text-xs font-black uppercase tracking-widest">③ AIでの操作手順</p>
+                        <div class="space-y-2 text-xs text-indigo-200">
+                            <div class="flex items-start gap-2">
+                                <span class="bg-white/10 rounded-full w-5 h-5 flex items-center justify-center font-black shrink-0 text-[10px]">1</span>
+                                <span>上のボタンでClaude.aiまたはGeminiを開く</span>
+                            </div>
+                            <div class="flex items-start gap-2">
+                                <span class="bg-white/10 rounded-full w-5 h-5 flex items-center justify-center font-black shrink-0 text-[10px]">2</span>
+                                <span>PDFファイルをアップロードする（画面のクリップアイコンから）</span>
+                            </div>
+                            <div class="flex items-start gap-2">
+                                <span class="bg-white/10 rounded-full w-5 h-5 flex items-center justify-center font-black shrink-0 text-[10px]">3</span>
+                                <span>上でコピーした指示文を貼り付けて送信する</span>
+                            </div>
+                            <div class="flex items-start gap-2">
+                                <span class="bg-white/10 rounded-full w-5 h-5 flex items-center justify-center font-black shrink-0 text-[10px]">4</span>
+                                <span>AIが出力した <strong>[ から始まる文字列（JSON）</strong> を全部コピーする</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- STEP 2 -->
+            <div>
+                <div class="flex items-center gap-3 mb-4">
+                    <div class="w-8 h-8 rounded-full bg-emerald-600 flex items-center justify-center font-black text-white text-sm shrink-0">2</div>
+                    <p class="font-black text-indigo-100 text-base">コピーしたデータを貼り付けて登録する</p>
+                </div>
+                <div class="bg-white/5 rounded-[28px] p-6 border border-white/10 space-y-4">
+                    <div class="bg-emerald-500/10 border border-emerald-400/30 rounded-2xl p-4">
+                        <p class="text-emerald-200 text-xs font-bold leading-relaxed">
+                            📋 AIがJSON形式で出力したデータを、下の入力欄にそのまま貼り付けてください。<br>
+                            <span class="text-emerald-300">[ で始まり ] で終わる部分だけ貼り付ければOKです。</span>
+                        </p>
+                    </div>
+                    <textarea id="ai-json-input" rows="5"
+                        class="w-full p-5 bg-black/30 border border-white/10 rounded-[24px] text-indigo-100 font-mono text-xs outline-none focus:ring-4 focus:ring-emerald-500/30 transition-all"
+                        placeholder='[{"name":"企業名","cate":"IT・ソフトウェア","method":"オンライン","dates":"4/10, 17","months":[4],"desc":"紹介文","url":"https://..."}]'></textarea>
+                    <!-- QR保護モード -->
+                    <div class="bg-amber-500/10 border border-amber-400/30 rounded-2xl p-4 flex items-center justify-between gap-4">
+                        <div>
+                            <p class="text-amber-200 text-xs font-black">🛡 QR保護モード</p>
+                            <p class="text-amber-300/70 text-[11px] mt-0.5">ONにすると、QR・URL登録済みの企業は日程・コメントのみ更新し、QRを上書きしません</p>
+                        </div>
+                        <label class="relative inline-flex items-center cursor-pointer shrink-0">
+                            <input type="checkbox" id="qr-protect-mode" class="sr-only peer" checked>
+                            <div class="w-11 h-6 bg-white/20 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-amber-500"></div>
+                            <span id="qr-protect-label" class="ml-2 text-xs font-black text-amber-300">ON</span>
+                        </label>
+                    </div>
+                    <button id="btn-import-json"
+                        class="w-full bg-emerald-500 hover:bg-emerald-400 text-white font-black py-5 rounded-[24px] shadow-2xl flex items-center justify-center gap-3 active:scale-[0.98] transition-all">
+                        <i data-lucide="zap" class="w-6 h-6"></i> 貼り付けたデータを登録する
+                    </button>
+                    <p class="text-indigo-500 text-[11px] text-center">登録後、学生画面に即時反映されます</p>
+                    <div id="import-status" class="hidden bg-emerald-500/10 border border-emerald-400/20 rounded-2xl p-3 text-xs text-emerald-300 font-bold text-center"></div>
+                    <div class="bg-sky-500/10 border border-sky-400/30 rounded-2xl p-3 text-[11px] text-sky-300 leading-relaxed">
+                        📱 <strong>LINE QRコードのURLについて：</strong><br>
+                        スマホでポスターのQRを読む → メールで自分に送る → 管理画面の「編集」ボタン → URL欄に貼り付けて保存
+                    </div>
+                </div>
+            </div>
+
+            <!-- 非表示の隠し要素（既存JSとの互換性維持） -->
+            <div class="hidden">
+                <div id="panel-pdf"></div>
+                <div id="panel-manual"></div>
+                <div id="pdf-drop-zone"></div>
+                <div id="pdf-analyzing"></div>
+                <div id="pdf-result-area"></div>
+                <div id="pdf-preview"></div>
+                <button id="tab-pdf"></button>
+                <button id="tab-manual"></button>
+                <button id="btn-pdf-import"></button>
+                <button id="btn-pdf-retry"></button>
+                <input type="file" id="pdf-file-input" accept=".pdf">
+                <p id="pdf-file-name"></p>
+            </div>
+        </div>
+    </div>
+
+    <!-- 手動追加 -->
+    <div class="bg-white p-8 rounded-[48px] shadow-sm border border-slate-100">
+        <h3 class="text-xl font-bold mb-6 flex items-center gap-2">
+            <i data-lucide="pen-tool" class="w-5 h-5 text-slate-400"></i> 企業を手動で追加
+        </h3>
+        <form id="add-form" class="space-y-4">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <input type="text" id="form-name" required placeholder="企業名 *"
+                    class="p-4 bg-slate-50 border border-slate-200 rounded-2xl outline-none focus:border-indigo-400 text-sm font-bold">
+                <select id="form-cate" class="p-4 bg-slate-50 border border-slate-200 rounded-2xl outline-none font-bold text-slate-700 text-sm">
+                    <option>IT・ソフトウェア</option><option>医療・福祉・介護</option>
+                    <option>商社・小売・外食</option><option>金融・建設・その他</option><option>その他</option>
+                </select>
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <input type="text" id="form-method" placeholder="開催形式（例：オンライン）"
+                    class="p-4 bg-slate-50 border border-slate-200 rounded-2xl outline-none focus:border-indigo-400 text-sm">
+                <input type="text" id="form-months" placeholder="開催月（例：4,5）"
+                    class="p-4 bg-slate-50 border border-slate-200 rounded-2xl outline-none focus:border-indigo-400 text-sm">
+            </div>
+            <input type="text" id="form-dates" placeholder="日程テキスト（例：4/15, 22, 28）"
+                class="w-full p-4 bg-slate-50 border border-slate-200 rounded-2xl outline-none focus:border-indigo-400 text-sm">
+            <textarea id="form-desc" required rows="3" placeholder="先生コメント・紹介文 *"
+                class="w-full p-4 bg-slate-50 border border-slate-200 rounded-2xl resize-none text-sm outline-none focus:border-indigo-400"></textarea>
+            <!-- 🔵 HP用URL -->
+            <div class="bg-indigo-50 border border-indigo-100 rounded-2xl p-4 space-y-2">
+                <label class="text-xs font-black text-indigo-600 uppercase tracking-widest block flex items-center gap-1.5">
+                    <span class="w-3 h-3 rounded-full bg-indigo-500 inline-block"></span> 公式HP URL（企業を知る・企業研究用）
+                </label>
+                <input type="url" id="form-url-hp" placeholder="https://（企業公式サイト）空欄でもOK"
+                    class="w-full p-3 bg-white border border-indigo-200 rounded-xl outline-none focus:border-indigo-500 text-sm">
+                <label class="text-xs font-black text-indigo-400 block">🔵 HP用QRコード画像（URLがない場合）</label>
+                <div class="flex items-center gap-3">
+                    <label class="flex-1 cursor-pointer">
+                        <div id="form-qr-preview-hp" class="w-full p-3 bg-white border-2 border-dashed border-indigo-200 rounded-xl text-center text-indigo-300 text-sm hover:border-indigo-400 transition-all">
+                            📷 HP用QR画像を選択
+                        </div>
+                        <input type="file" id="form-qr-input-hp" accept="image/*" class="hidden">
+                    </label>
+                    <button type="button" id="form-qr-clear-hp" class="hidden text-xs text-red-400 font-bold px-3 py-2 rounded-xl hover:bg-red-50">削除</button>
+                </div>
+                <input type="hidden" id="form-qr-data-hp">
+            </div>
+            <!-- 🟢 エントリー用URL -->
+            <div class="bg-emerald-50 border border-emerald-100 rounded-2xl p-4 space-y-2">
+                <label class="text-xs font-black text-emerald-600 uppercase tracking-widest block flex items-center gap-1.5">
+                    <span class="w-3 h-3 rounded-full bg-emerald-500 inline-block"></span> エントリーURL（申し込む・マイナビ・LINE等）
+                </label>
+                <div class="flex gap-2 items-center">
+                    <input type="url" id="form-url" placeholder="https://（マイナビ・LINE・応募フォーム等）空欄でもOK"
+                        class="flex-1 p-3 bg-white border border-emerald-200 rounded-xl outline-none focus:border-emerald-500 text-sm">
+                    <button type="button" id="form-qr-camera-btn"
+                        class="flex items-center gap-1.5 bg-emerald-500 hover:bg-emerald-600 text-white text-xs font-black px-4 py-3 rounded-2xl transition-all whitespace-nowrap shrink-0">
+                        <i data-lucide="camera" class="w-4 h-4"></i> カメラでQRを読む
+                    </button>
+                </div>
+                <p class="text-[11px] text-emerald-600 font-bold">📱 スマホのカメラでQRコードを読み取ってURLを自動入力できます</p>
+                <label class="text-xs font-black text-emerald-500 block">🟢 エントリー用QRコード画像（URLがない場合）</label>
+                <div class="flex items-center gap-3">
+                    <label class="flex-1 cursor-pointer">
+                        <div id="form-qr-preview" class="w-full p-3 bg-white border-2 border-dashed border-emerald-200 rounded-2xl text-center text-emerald-400 text-sm hover:border-emerald-400 transition-all">
+                            📷 エントリー用QR画像を選択
+                        </div>
+                        <input type="file" id="form-qr-input" accept="image/*" class="hidden">
+                    </label>
+                    <button type="button" id="form-qr-clear" class="hidden text-xs text-red-400 font-bold px-3 py-2 rounded-xl hover:bg-red-50">削除</button>
+                </div>
+                <input type="hidden" id="form-qr-data">
+            </div>
+            <div>
+                <label class="text-xs font-black text-slate-400 uppercase tracking-widest mb-1 block">掲載終了日（空欄＝無期限）</label>
+                <input type="date" id="form-enddate"
+                    class="w-full p-4 bg-slate-50 border border-slate-200 rounded-2xl outline-none focus:border-indigo-400 text-sm">
+            </div>
+            <button type="submit" class="w-full bg-indigo-600 text-white font-black py-4 rounded-3xl shadow-lg hover:bg-indigo-700">
+                企業を追加する
+            </button>
+        </form>
+    </div>
+
+    <!-- 📱 QR補完パネル -->
+    <div class="bg-white rounded-[40px] border border-orange-200 shadow-sm overflow-hidden">
+        <div class="px-8 py-5 bg-orange-50 border-b border-orange-100 flex items-center gap-3">
+            <div class="bg-orange-100 p-2 rounded-xl">
+                <i data-lucide="qr-code" class="w-5 h-5 text-orange-600"></i>
+            </div>
+            <div>
+                <p class="font-black text-orange-800 text-sm">📱 QRコード補完パネル</p>
+                <p class="text-[11px] text-orange-600 mt-0.5">スマホでQRを読んだURLをここに貼るだけで企業データに追加できます</p>
+            </div>
+        </div>
+        <div class="p-6 md:p-8 space-y-5">
+            <!-- 使い方説明 -->
+            <div class="bg-sky-50 border border-sky-200 rounded-2xl p-4 text-xs text-sky-800 leading-relaxed font-bold space-y-1">
+                <p>① ポスターのQRコードをスマホで読む</p>
+                <p>② 表示されたURLをコピーする（LINEなら「リンクをコピー」）</p>
+                <p>③ 下で企業名を選んでURLを貼り付けて「保存」</p>
+            </div>
+            <!-- 企業選択 -->
+            <div>
+                <label class="text-xs font-black text-slate-400 uppercase tracking-widest mb-2 block">企業を選択（QR未登録のみ表示）</label>
+                <select id="qr-target-select"
+                    class="w-full p-4 bg-slate-50 border-2 border-slate-200 rounded-2xl outline-none focus:border-orange-400 text-sm font-bold text-slate-700">
+                    <option value="">― 企業を選んでください ―</option>
+                </select>
+            </div>
+            <!-- URL入力 -->
+            <div>
+                <label class="text-xs font-black text-slate-400 uppercase tracking-widest mb-2 block">QRコードのURL（貼り付けてください）</label>
+                <input type="url" id="qr-url-input" placeholder="https://line.me/... または https://..."
+                    class="w-full p-4 bg-slate-50 border-2 border-slate-200 rounded-2xl outline-none focus:border-orange-400 text-sm">
+            </div>
+            <!-- 保存ボタン -->
+            <button id="btn-qr-save"
+                class="w-full bg-orange-500 hover:bg-orange-600 text-white font-black py-4 rounded-2xl text-sm flex items-center justify-center gap-2 transition-all shadow-md">
+                <i data-lucide="save" class="w-4 h-4"></i> QRのURLを保存する
+            </button>
+            <p id="qr-save-msg" class="hidden text-center text-sm font-black text-emerald-600 py-2">✅ 保存しました！</p>
+        </div>
+    </div>
+
+    <!-- 企業管理リスト -->
+
+    <div class="bg-white rounded-[40px] border border-slate-200 shadow-sm overflow-hidden">
+        <div class="px-8 py-5 bg-slate-50 border-b border-slate-100 flex justify-between items-center flex-wrap gap-3">
+            <div>
+                <p class="font-black text-slate-700 text-sm">企業データの管理</p>
+                <p class="text-[10px] text-slate-400 mt-0.5">終了済みは学生画面に表示されません。管理画面では常に見えます。</p>
+            </div>
+            <div class="flex items-center gap-2">
+                <span id="admin-count" class="bg-indigo-100 text-indigo-600 px-3 py-1 rounded-full text-[10px] font-black">0件</span>
+                <button id="btn-bulk-delete-expired"
+                    class="flex items-center gap-1.5 text-[11px] font-black px-4 py-2 bg-red-50 text-red-600 border border-red-200 rounded-2xl hover:bg-red-500 hover:text-white hover:border-transparent transition-all">
+                    <i data-lucide="trash-2" class="w-3.5 h-3.5"></i> 終了済みを一括削除
+                </button>
+            </div>
+        </div>
+        <div class="px-8 py-4 border-b border-slate-100 flex gap-3 flex-wrap">
+            <input type="text" id="admin-search" placeholder="企業名で絞り込み..."
+                class="flex-1 min-w-[160px] p-3 bg-slate-50 border border-slate-200 rounded-xl text-sm outline-none focus:border-indigo-400">
+            <select id="admin-cate-filter" class="p-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold outline-none">
+                <option value="all">すべての業界</option>
+                <option value="IT・ソフトウェア">IT</option>
+                <option value="医療・福祉・介護">医療</option>
+                <option value="商社・小売・外食">商社・小売</option>
+                <option value="金融・建設・その他">金融他</option>
+            </select>
+            <select id="admin-status-filter" class="p-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold outline-none">
+                <option value="all">すべて</option>
+                <option value="active">掲載中のみ</option>
+                <option value="expired">終了済みのみ</option>
+            </select>
+        </div>
+        <div id="admin-list" class="divide-y divide-slate-100 min-h-[80px]"></div>
+    </div>
+</main>
+
+<footer class="py-16 px-4 text-center border-t border-slate-100 mt-auto bg-white">
+    <p class="text-slate-300 text-[10px] font-black uppercase tracking-[0.4em]">&copy; 2025 Tama University Career Center</p>
+</footer>
+
+<!-- Firebase Compat（ローカルファイルでも動作） -->
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-storage-compat.js"></script>
+<script>
+// ── Firebase設定（Compat版：ローカルファイルでも動作） ──
+const FB = {
+    apiKey:"AIzaSyBTxRgOvPYOmacVfJkEjLLgI2K-ASnZbq4",
+    authDomain:"career-board-4a3f8.firebaseapp.com",
+    projectId:"career-board-4a3f8",
+    storageBucket:"career-board-4a3f8.firebasestorage.app",
+    messagingSenderId:"235913147040",
+    appId:"1:235913147040:web:39c20d95267e2777ef4fc5"
+};
+const AID = "career-board-4a3f8";
+firebase.initializeApp(FB);
+const auth    = firebase.auth();
+const db      = firebase.firestore();
+const storage = firebase.storage();
+
+const colRef = () => db.collection('artifacts').doc(AID).collection('public').doc('data').collection('companies');
+const metaR  = ()  => db.collection('artifacts').doc(AID).collection('public').doc('data').collection('meta').doc('initialized');
+
+// ── 重複チェック付き登録ヘルパー ──
+// 同じ企業名が既に存在する場合は最新データで上書き（upsert）する
+async function upsertCompany(data) {
+    const name = (data.name || '').trim();
+    if (!name || name === '不明') {
+        // 名称不明はそのままaddする
+        await colRef().add(data);
+        return 'added';
+    }
+    const snap = await colRef().where('name', '==', name).limit(1).get();
+    if (!snap.empty) {
+        // 既存ドキュメントを上書き（dateAddedは現在時刻で更新して最新扱いに）
+        await snap.docs[0].ref.update({ ...data, dateAdded: new Date().toISOString() });
+        return 'updated';
+    } else {
+        await colRef().add(data);
+        return 'added';
+    }
+}
+
+// ── QR画像をFirebase Storageにアップロード → ダウンロードURL返却 ──
+// ── base64画像を圧縮（最大240px JPEG） ──
+function compressImage(dataUrl, maxPx=240, quality=0.82) {
+    return new Promise(resolve => {
+        const img = new Image();
+        const timer = setTimeout(() => resolve(null), 8000); // 8秒でタイムアウト
+        img.onload = () => {
+            clearTimeout(timer);
+            const scale = Math.min(1, maxPx / Math.max(img.width || 1, img.height || 1));
+            const w = Math.max(1, Math.round(img.width  * scale));
+            const h = Math.max(1, Math.round(img.height * scale));
+            const c = document.createElement('canvas');
+            c.width = w; c.height = h;
+            c.getContext('2d').drawImage(img, 0, 0, w, h);
+            resolve(c.toDataURL('image/jpeg', quality));
+        };
+        img.onerror = () => { clearTimeout(timer); resolve(null); };
+        img.src = dataUrl.startsWith('data:') ? dataUrl : 'data:image/png;base64,' + dataUrl;
+    });
+}
+
+async function uploadQRToStorage(base64DataUrl, label) {
+    if (!base64DataUrl) return '';
+    let dataUrl = base64DataUrl.trim();
+    if (!dataUrl.startsWith('data:')) dataUrl = 'data:image/png;base64,' + dataUrl;
+
+    try {
+        // ① 先に圧縮（どんな大きさでも240px JPEG ~20KBに削減）
+        const compressed = await compressImage(dataUrl, 240, 0.82);
+        if (!compressed) throw new Error('画像圧縮失敗');
+
+        const safeName = (label||'qr').replace(/[^a-zA-Z0-9぀-鿿]/g,'_').slice(0,30);
+        const path = `qrcodes/${Date.now()}_${safeName}.jpg`;
+        const sRef = storage.ref(path);
+
+        const timeout = (ms, msg) => new Promise((_,rej) => setTimeout(()=>rej(new Error(msg)), ms));
+
+        // ② 20秒タイムアウトでアップロード
+        const snap = await Promise.race([
+            sRef.putString(compressed, 'data_url'),
+            timeout(20000, 'Storageアップロードタイムアウト（20秒）')
+        ]);
+        const url = await Promise.race([
+            snap.ref.getDownloadURL(),
+            timeout(10000, 'URL取得タイムアウト（10秒）')
+        ]);
+        console.log('✅ Storage upload成功:', url);
+        return url;
+    } catch(e) {
+        console.warn('Storage upload失敗:', e.message);
+        return '';
+    }
+}
+
+// ── base64画像からjsQRでURLを読み取るフォールバック ──
+async function decodeUrlFromBase64Image(base64DataUrl) {
+    return new Promise(resolve => {
+        const img = new Image();
+        img.onload = () => {
+            const c = document.createElement('canvas');
+            c.width = img.width; c.height = img.height;
+            c.getContext('2d').drawImage(img, 0, 0);
+            const d = c.getContext('2d').getImageData(0, 0, c.width, c.height);
+            const code = typeof jsQR !== 'undefined'
+                ? jsQR(d.data, c.width, c.height, { inversionAttempts:'attemptBoth' })
+                : null;
+            resolve(code?.data || '');
+        };
+        img.onerror = () => resolve('');
+        img.src = base64DataUrl.startsWith('data:') ? base64DataUrl : 'data:image/png;base64,' + base64DataUrl;
+    });
+}
+
+// ── QR表示ブロック（HP用🔵 + エントリー用🟢 の2つ対応） ──
+function qrBlock(d, extraClass='') {
+    let html = '';
+
+    // 🔵 HP用QR
+    const hpSrc = d.qrStorageUrlHp || d.qrImageHp;
+    const hpUrl = d.urlHp || d.qrDataHp;
+    if (hpSrc) {
+        html += '<div class="bg-indigo-50 rounded-2xl p-4 border border-indigo-100 text-center '+extraClass+' mb-3">' +
+            '<p class="text-[11px] text-indigo-600 font-black mb-2">🔵 企業を知る（公式サイト）</p>' +
+            '<img src="'+hpSrc+'" alt="HP QR" class="w-32 h-32 mx-auto rounded-xl object-contain border border-indigo-200"></div>';
+    } else if (hpUrl) {
+        html += '<div class="bg-indigo-50 rounded-2xl p-4 border border-indigo-100 text-center '+extraClass+' mb-3">' +
+            '<p class="text-[11px] text-indigo-600 font-black mb-2">🔵 企業を知る（公式サイト）</p>' +
+            '<div data-qr-url="'+hpUrl+'" class="flex justify-center"></div></div>';
+    }
+
+    // 🟢 エントリー用QR（旧qrStorageUrl/qrImageも含め後方互換）
+    const entrySrc = d.qrStorageUrl || d.qrImage;
+    const entryUrl = d.qrData || d.url;
+    if (entrySrc) {
+        html += '<div class="bg-emerald-50 rounded-2xl p-4 border border-emerald-100 text-center '+extraClass+'">' +
+            '<p class="text-[11px] text-emerald-700 font-black mb-2">🟢 申し込む（エントリー・LINE等）</p>' +
+            '<img src="'+entrySrc+'" alt="エントリーQR" class="w-32 h-32 mx-auto rounded-xl object-contain border border-emerald-200"></div>';
+    } else if (entryUrl) {
+        html += '<div class="bg-emerald-50 rounded-2xl p-4 border border-emerald-100 text-center '+extraClass+'">' +
+            '<p class="text-[11px] text-emerald-700 font-black mb-2">🟢 申し込む（エントリー・LINE等）</p>' +
+            '<div data-qr-url="'+entryUrl+'" class="flex justify-center"></div></div>';
+    }
+
+    return html;
+}
+
+// ── 初期10社 ──
+const INIT = [
+    {name:"デジタル・インフォメーション・テクノロジー",cate:"IT・ソフトウェア", method:"オンライン",           dates:"3/24, 25, 4/9, 15, 16, 22, 28",        months:[3,4],  desc:"東証プライム上場。文理不問エンジニア募集。IT業界入門編あり。",  url:"https://www.ditgroup.jp/"},
+    {name:"NIC日本インフォメーション",                cate:"IT・ソフトウェア", method:"対面(東京・名・阪)/WEB",dates:"3/18, 26, 4/9, 20 等",                months:[3,4],  desc:"独立系。対面説明会は選考短縮特典あり。",                      url:"https://www.nicnet.co.jp/"},
+    {name:"エイムワールド",                          cate:"IT・ソフトウェア", method:"WEB (Google Meet)",  dates:"3/26, 4/2, 7, 9, 14, 16, 22, 24, 28",months:[3,4],  desc:"ITエンジニア・DX推進。少人数制で質問しやすい。",              url:"https://aimworld.co.jp/"},
+    {name:"徳洲会グループ（事務職）",                 cate:"医療・福祉・介護", method:"オンライン",           dates:"3/27, 4/8, 10, 15, 17, 22, 5/8",      months:[3,4,5],desc:"日本最大級の医療グループ。病院経営を支える総合事務職。",        url:"https://www.tokushukai.or.jp/"},
+    {name:"シンボー情報システム",                    cate:"IT・ソフトウェア", method:"オンライン",           dates:"カレンダー形式で毎日複数回開催",         months:[3,4,5],desc:"横浜本社のIT企業。人物重視の採用を実施中。",                url:"https://www.simbo.co.jp/"},
+    {name:"KOYO証券",                              cate:"金融・建設・その他",method:"WEB説明会",           dates:"4/2, 7, 9, 14, 21, 23, 28, 30",       months:[4],    desc:"独立系証券会社。資産運用のコンサルティング営業職。",          url:"https://www.koyo-sec.co.jp/"},
+    {name:"旭情報サービス",                         cate:"IT・ソフトウェア", method:"WEB",                dates:"4/7, 9, 13, 17, 21, 27",              months:[4],    desc:"ITインフラ・運用管理の老舗。教育体制が充実。",               url:"https://www.aiserv.co.jp/"},
+    {name:"コンパスグループ・ジャパン",               cate:"商社・小売・外食", method:"オンライン / 現地見学",dates:"3/27, 4/9, 22 / 4/23(社食見学)",      months:[3,4],  desc:"世界最大級の外資系フードサービス。社食ランチ体験会あり。",     url:"https://www.compass-jpn.com/"},
+    {name:"ブロンコビリー",                         cate:"商社・小売・外食", method:"オンライン",           dates:"4/15（多摩大生限定枠）",               months:[4],    desc:"ステーキ・ハンバーグ専門店。学内限定の特別説明会。",          url:"https://www.bronco.co.jp/"},
+    {name:"シー・エス・イー",                       cate:"IT・ソフトウェア", method:"オンライン",           dates:"4/2, 4/16 等",                        months:[4],    desc:"創業50年超。セキュリティソリューションに強み。",             url:"https://www.cseltd.co.jp/"}
+];
+const CC = {"IT・ソフトウェア":"cate-it","医療・福祉・介護":"cate-med","商社・小売・外食":"cate-shosha","金融・建設・その他":"cate-fin"};
+
+// ── 状態 ──
+let companies = [];
+let sortMode  = 'date-asc';
+let isAdmin   = false;
+
+// ── ユーティリティ ──
+const expired = d => {
+    if (d.active === false) return true;
+    if (!d.endDate) return false;
+    const t = new Date(); t.setHours(0,0,0,0);
+    return new Date(d.endDate) < t;
+};
+// HTMLエスケープ（innerHTML埋め込み用）
+const escHtml = s => (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+// onclick属性のシングルクォートエスケープ（引数文字列用）
+const esc = s => escHtml(s||'');
+
+// ── 日付ユーティリティ ──
+function parseAllDates(datesStr) {
+    if (!datesStr) return [];
+    const year = new Date().getFullYear();
+    const results = [];
+    const tokens = datesStr.split(/[\s,、・]+/).filter(t => t.trim());
+    let currentMonth = null;
+    for (const token of tokens) {
+        const full    = token.match(/^(\d{1,2})\/(\d{1,2})$/);
+        const dayOnly = token.match(/^(\d{1,2})$/);
+        if (full) {
+            currentMonth = parseInt(full[1]);
+            results.push(new Date(year, currentMonth-1, parseInt(full[2])));
+        } else if (dayOnly && currentMonth !== null) {
+            results.push(new Date(year, currentMonth-1, parseInt(dayOnly[1])));
+        }
+    }
+    return results;
+}
+function getDaysUntilNext(datesStr) {
+    const today = new Date(); today.setHours(0,0,0,0);
+    const future = parseAllDates(datesStr).filter(d => d >= today).sort((a,b) => a-b);
+    if (!future.length) return null;
+    return Math.round((future[0] - today) / (1000*60*60*24));
+}
+function formatDatesColored(datesStr) {
+    if (!datesStr) return datesStr;
+    const today = new Date(); today.setHours(0,0,0,0);
+    const year = today.getFullYear();
+    let currentMonth = null;
+    const parts = datesStr.split(/([\d\/]+)/);
+    let result = '';
+    for (const part of parts) {
+        const full    = part.match(/^(\d{1,2})\/(\d{1,2})$/);
+        const dayOnly = part.match(/^(\d{1,2})$/);
+        if (full) {
+            currentMonth = parseInt(full[1]);
+            const d = new Date(year, currentMonth-1, parseInt(full[2]));
+            const diff = Math.round((d - today) / (1000*60*60*24));
+            if (diff < 0)        result += '<span class="date-past">'   + part + '</span>';
+            else if (diff === 0) result += '<span class="date-today">'  + part + '(今日！)</span>';
+            else                 result += '<span class="date-future">' + part + '</span>';
+        } else if (dayOnly && currentMonth !== null) {
+            const d = new Date(year, currentMonth-1, parseInt(dayOnly[1]));
+            const diff = Math.round((d - today) / (1000*60*60*24));
+            if (diff < 0)        result += '<span class="date-past">'   + part + '</span>';
+            else if (diff === 0) result += '<span class="date-today">'  + part + '(今日！)</span>';
+            else                 result += '<span class="date-future">' + part + '</span>';
+        } else {
+            result += part;
+        }
+    }
+    return result;
+}
+function daysBadge(days) {
+    if (days === null) return '';
+    if (days === 0) return '<span class="days-badge-urgent px-2 py-1 rounded-full text-[10px] font-black">🔥 今日開催！</span>';
+    if (days <= 3)  return '<span class="days-badge-urgent px-2 py-1 rounded-full text-[10px] font-black">⚡ あと' + days + '日</span>';
+    if (days <= 7)  return '<span class="days-badge-soon px-2 py-1 rounded-full text-[10px] font-black">📌 あと' + days + '日</span>';
+    return '<span class="days-badge-ok px-2 py-1 rounded-full text-[10px] font-black">📅 あと' + days + '日</span>';
+}
+
+// ── 描画 ──
+function generateQRCodes() {
+    if (typeof QRCode === 'undefined') return;
+    document.querySelectorAll('[data-qr-url]').forEach(el => {
+        const url = el.getAttribute('data-qr-url');
+        if (!url) return;
+        const size = parseInt(el.getAttribute('data-qr-size') || '144');
+        el.removeAttribute('data-qr-url');
+        el.removeAttribute('data-qr-size');
+        el.innerHTML = '';
+        try {
+            new QRCode(el, {
+                text: url,
+                width: size,
+                height: size,
+                correctLevel: QRCode.CorrectLevel.M
+            });
+        } catch(e) { console.warn('QR生成失敗:', e); }
+    });
+}
+
+function redrawAll() {
+    updateMonthFilter();
+    drawThisWeekBanner();
+    drawCurated();
+    drawBulk();
+    if (isAdmin) { drawAdmin(); }
+    if (typeof window._rebuildQrSelect === 'function') window._rebuildQrSelect();
+    lucide.createIcons();
+}
+
+// ── 月フィルター動的生成 ──
+// 現在月より前は除外、直近4ヶ月は個別表示、それ以降は「X月以降」にまとめる
+function updateMonthFilter() {
+    const sel = document.getElementById('monthFilter');
+    if (!sel) return;
+    const prev = sel.value;
+    const now = new Date();
+    const curMonth = now.getMonth() + 1; // 1-12
+
+    // 全企業から有効なmonthsを収集
+    const monthSet = new Set();
+    companies.filter(d => !expired(d)).forEach(d => {
+        (d.months || []).forEach(m => { if (m >= curMonth) monthSet.add(m); });
+    });
+    const months = [...monthSet].sort((a, b) => a - b);
+
+    // 直近4ヶ月 vs それ以降
+    const near = months.filter(m => m < curMonth + 4);
+    const later = months.filter(m => m >= curMonth + 4);
+
+    let html = '<option value="all">すべての月</option>';
+    near.forEach(m => { html += `<option value="${m}">${m}月</option>`; });
+    if (later.length > 0) {
+        const firstLater = later[0];
+        html += `<option value="later">${firstLater}月以降</option>`;
+    }
+    sel.innerHTML = html;
+
+    // 選択値を復元（存在しない選択肢になった場合はallに戻す）
+    if ([...sel.options].some(o => o.value === prev)) sel.value = prev;
+    else sel.value = 'all';
+}
+
+function drawThisWeekBanner() {
+    const banner = document.getElementById('this-week-banner');
+    if (!banner) return;
+    const today = new Date(); today.setHours(0,0,0,0);
+    const nextWeek = new Date(today); nextWeek.setDate(today.getDate() + 7);
+    const list = companies.filter(d => {
+        if (expired(d)) return false;
+        return parseAllDates(d.dates).some(dt => dt >= today && dt <= nextWeek);
+    }).sort((a,b) => {
+        const da = parseAllDates(a.dates).filter(d=>d>=today)[0] || new Date(9999,0,1);
+        const db = parseAllDates(b.dates).filter(d=>d>=today)[0] || new Date(9999,0,1);
+        return da - db;
+    });
+    if (!list.length) { banner.innerHTML = ''; return; }
+    const WDAY = ['日','月','火','水','木','金','土'];
+    banner.innerHTML = '<div class="bg-gradient-to-r from-red-50 to-orange-50 border border-red-200 rounded-[32px] p-6 md:p-8">' +
+        '<div class="flex items-center gap-3 mb-5">' +
+        '<div class="bg-red-500 text-white px-3 py-1 rounded-full text-xs font-black">今週の説明会</div>' +
+        '<span class="text-sm text-slate-500 font-bold">直近7日以内に開催予定</span></div>' +
+        '<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">' +
+        list.map(d => {
+            const future = parseAllDates(d.dates).filter(dt=>dt>=today).sort((a,b)=>a-b);
+            const next = future[0];
+            const diff = next ? Math.round((next-today)/(1000*60*60*24)) : null;
+            const dateStr = next ? (next.getMonth()+1)+'/'+next.getDate() : '';
+            const wday = next ? WDAY[next.getDay()] : '';
+            return '<div class="bg-white rounded-2xl p-4 border border-red-100 flex items-center gap-3 shadow-sm">' +
+                '<div class="shrink-0 text-center bg-red-500 text-white rounded-xl px-3 py-2 min-w-[52px]">' +
+                '<div class="text-lg font-black leading-none">' + dateStr + '</div>' +
+                '<div class="text-[10px] font-bold mt-0.5">(' + wday + ') ' + (diff===0?'今日':diff+'日後') + '</div></div>' +
+                '<div class="min-w-0"><p class="font-black text-slate-800 text-sm leading-tight truncate">' + d.name + '</p>' +
+                '<p class="text-[11px] text-slate-400 font-bold mt-0.5">' + (d.method||'') + '</p></div></div>';
+        }).join('') + '</div></div>';
+}
+
+function drawCurated() {
+    const el = document.getElementById('curated-container');
+    if (!el) return;
+    const list = companies.filter(c => c.curated && !expired(c))
+        .sort((a,b) => new Date(b.dateAdded||0)-new Date(a.dateAdded||0));
+    if (!list.length) {
+        el.innerHTML = '<div class="col-span-full"><div class="teacher-bubble p-8 rounded-[40px] shadow-sm mb-6">' +
+            '<h4 class="text-2xl font-black text-indigo-600 mb-4 flex items-center gap-2"><i data-lucide="message-circle"></i> 先生からのメッセージ</h4>' +
+            '<p class="text-lg font-bold text-slate-700 leading-relaxed italic">「直接企業にお話を伺っていますが、コミュ力より意欲を重視する企業が増えています。焦らなくて大丈夫ですよ。」</p>' +
+            '</div></div>';
+    } else {
+        el.innerHTML = list.map(d => {
+            // 🔵 HP用QR（小さく・企業名横）
+            const hpQrSrcC = d.qrStorageUrlHp || d.qrImageHp;
+            const hpQrUrlC = d.urlHp || d.qrDataHp;
+            const hpQrBlockC = hpQrSrcC
+                ? '<div class="flex flex-col items-center gap-1 shrink-0">' +
+                  '<img src="'+hpQrSrcC+'" class="w-20 h-20 rounded-xl border border-indigo-200 object-contain bg-white" alt="HP QR">' +
+                  (d.urlHp?'<a href="'+d.urlHp+'" target="_blank" class="text-[10px] text-indigo-500 font-black hover:underline whitespace-nowrap">HPを見る↗</a>':'') +
+                  '</div>'
+                : hpQrUrlC
+                    ? '<div class="flex flex-col items-center gap-1 shrink-0">' +
+                      '<div data-qr-url="'+hpQrUrlC+'" data-qr-size="80" class="flex justify-center w-20 h-20"></div>' +
+                      '<a href="'+hpQrUrlC+'" target="_blank" class="text-[10px] text-indigo-500 font-black hover:underline whitespace-nowrap">HPを見る↗</a>' +
+                      '</div>'
+                    : (d.urlHp
+                        ? '<div class="flex flex-col items-center justify-center gap-1 shrink-0 w-20">' +
+                          '<div class="w-20 h-20 bg-indigo-50 rounded-xl border border-indigo-200 flex items-center justify-center text-indigo-300 text-[10px] font-bold text-center leading-tight px-1">HP<br>QR未登録</div>' +
+                          '<a href="'+d.urlHp+'" target="_blank" class="text-[10px] text-indigo-500 font-black hover:underline whitespace-nowrap">HPを見る↗</a>' +
+                          '</div>'
+                        : '');
+
+            // 🟢 エントリー用QR（下部・大きめ）
+            const entrySrcC = d.qrStorageUrl || d.qrImage;
+            const entryUrlC = d.qrData || d.url;
+            const entryQrBlockC = entrySrcC
+                ? '<div class="bg-emerald-50 rounded-2xl p-4 border border-emerald-100 text-center mt-4">' +
+                  '<p class="text-[11px] text-emerald-700 font-black mb-2">🟢 申し込む（QRをスマホで読み取ってください）</p>' +
+                  '<img src="'+entrySrcC+'" class="w-32 h-32 mx-auto rounded-xl object-contain border border-emerald-200" alt="エントリーQR">' +
+                  (d.url?'<a href="'+d.url+'" target="_blank" class="mt-3 w-full bg-emerald-500 text-white font-bold py-3 rounded-xl flex items-center justify-center gap-2 hover:bg-emerald-600 transition-all text-sm">🟢 申し込む <i data-lucide="external-link" class="w-4 h-4"></i></a>':'') +
+                  '</div>'
+                : entryUrlC
+                    ? '<div class="bg-emerald-50 rounded-2xl p-4 border border-emerald-100 text-center mt-4">' +
+                      '<p class="text-[11px] text-emerald-700 font-black mb-2">🟢 申し込む（QRをスマホで読み取ってください）</p>' +
+                      '<div data-qr-url="'+entryUrlC+'" class="flex justify-center mb-2"></div>' +
+                      '<a href="'+entryUrlC+'" target="_blank" class="w-full bg-emerald-500 text-white font-bold py-3 rounded-xl flex items-center justify-center gap-2 hover:bg-emerald-600 transition-all text-sm">🟢 申し込む <i data-lucide="external-link" class="w-4 h-4"></i></a>' +
+                      '</div>'
+                    : (!(d.urlHp)
+                        ? '<div class="w-full bg-slate-100 text-slate-400 font-bold py-3 rounded-2xl text-center text-xs mt-4">お問い合わせ先は担当キャリアカウンセラーへ</div>'
+                        : '');
+
+            return '<div class="bg-white p-8 rounded-[40px] shadow-sm border border-slate-100 hover:shadow-xl transition-all group">' +
+                // ── ヘッダー：業界タグ + 日付 ──
+                '<div class="flex justify-between items-start mb-5">' +
+                '<span class="px-3 py-1 text-[10px] font-black rounded-full border ' + (CC[d.cate]||'cate-other') + '">' + (d.cate||'一般') + '</span>' +
+                '<span class="text-[10px] text-slate-400 font-bold">' + (d.dateAdded?new Date(d.dateAdded).toLocaleDateString('ja-JP'):'') + '</span></div>' +
+                // ── 企業名 + HP用QR（横並び）──
+                '<div class="flex items-start justify-between gap-4 mb-4">' +
+                '<h4 class="text-2xl font-black group-hover:text-indigo-600 transition-colors flex-1">'+d.name+'</h4>' +
+                hpQrBlockC +
+                '</div>' +
+                // ── 先生コメント ──
+                '<div class="bg-indigo-50/50 p-6 rounded-3xl border-l-4 border-indigo-500 mb-4">' +
+                '<p class="text-slate-700 text-[17px] font-bold italic leading-relaxed"><span class="text-indigo-400 text-2xl font-serif">"</span> ' + d.desc + '</p></div>' +
+                // ── 日程 ──
+                (d.dates?'<div class="flex items-center gap-2 bg-amber-50 text-amber-700 p-3 rounded-xl border border-amber-100 font-bold text-xs mb-2">📅 '+d.dates+'</div>':'') +
+                // ── エントリー用QR（下部）──
+                entryQrBlockC +
+                '</div>';
+        }).join('');
+    }
+    lucide.createIcons();
+    generateQRCodes();
+}
+
+function drawBulk() {
+    const box   = document.getElementById('bulk-container');
+    const noRes = document.getElementById('no-results');
+    if (!box) return;
+    const kw = (document.getElementById('bulk-search')?.value||'').toLowerCase();
+    const ca = document.getElementById('cateFilter')?.value||'all';
+    const mo = document.getElementById('monthFilter')?.value||'all';
+    const me = document.getElementById('methodFilter')?.value||'all';
+    let list = companies.filter(d => {
+        if (expired(d)) return false;
+        const sk = d.name?.toLowerCase().includes(kw)||d.desc?.toLowerCase().includes(kw);
+        const sc = ca==='all'||d.cate===ca;
+        const curM = new Date().getMonth() + 1;
+        const sm = mo==='all'
+            ? true
+            : mo==='later'
+                ? (d.months||[]).some(m => m >= curM + 4)
+                : (d.months||[]).includes(+mo);
+        const sf = me==='all'||(me==='対面'?(d.method||'').includes('対面'):(d.method||'').includes(me));
+        return sk&&sc&&sm&&sf;
+    });
+    const today2 = new Date(); today2.setHours(0,0,0,0);
+    const getNext = d => {
+        const f = parseAllDates(d.dates).filter(dt=>dt>=today2).sort((a,b)=>a-b);
+        return f[0] || new Date(9999,0,1);
+    };
+    if (sortMode==='date-asc')  list.sort((a,b)=>getNext(a)-getNext(b));
+    else if (sortMode==='date-desc') list.sort((a,b)=>getNext(b)-getNext(a));
+    else {
+        const co={'IT・ソフトウェア':1,'医療・福祉・介護':2,'商社・小売・外食':3,'金融・建設・その他':4,'その他':5};
+        list.sort((a,b)=>{ const ca=co[a.cate]||9,cb=co[b.cate]||9; return ca!==cb?ca-cb:getNext(a)-getNext(b); });
+    }
+    document.getElementById('results-count').textContent = '表示中: '+list.length+' 件';
+    if (!list.length){box.innerHTML='';noRes?.classList.remove('hidden');return;}
+    noRes?.classList.add('hidden');
+    const WDAY=['日','月','火','水','木','金','土'];
+    box.innerHTML = list.map(d=>{
+        const days = getDaysUntilNext(d.dates);
+        const coloredDates = formatDatesColored(d.dates);
+        const badge = daysBadge(days);
+        const hasUpcoming = days !== null;
+        const cardBorder = days!==null&&days<=3?'border-red-300':days!==null&&days<=7?'border-amber-200':'border-slate-200';
+        const today3 = new Date(); today3.setHours(0,0,0,0);
+        const futureDates = parseAllDates(d.dates).filter(dt=>dt>=today3).sort((a,b)=>a-b);
+        const nextDate = futureDates[0]||null;
+        let nextDateHTML = '';
+        if (nextDate) {
+            const mon=nextDate.getMonth()+1, day2=nextDate.getDate(), wday=WDAY[nextDate.getDay()];
+            const diff=Math.round((nextDate-today3)/(1000*60*60*24));
+            const bgCol=diff===0?'bg-red-500':diff<=3?'bg-orange-500':diff<=7?'bg-amber-500':'bg-indigo-600';
+            const label=diff===0?'今日！':diff<=7?'今週':'次回';
+            nextDateHTML = '<div class="flex items-center gap-3 mb-4">' +
+                '<div class="'+bgCol+' text-white rounded-2xl px-4 py-3 text-center min-w-[72px] shadow-md">' +
+                '<div class="text-[10px] font-black opacity-80 tracking-widest">'+label+'</div>' +
+                '<div class="text-2xl font-black leading-none">'+mon+'/'+day2+'</div>' +
+                '<div class="text-[11px] font-bold opacity-90">('+wday+')</div></div>' +
+                '<div>'+badge+'<p class="text-[11px] text-slate-400 font-bold mt-1">'+(d.method||'')+'</p></div></div>';
+        }
+        // 🔵 HP用QR（小さく・企業名横）
+        const hpQrSrc = d.qrStorageUrlHp || d.qrImageHp;
+        const hpQrUrl = d.urlHp || d.qrDataHp;
+        const hpQrBlock = hpQrSrc
+            ? '<div class="flex flex-col items-center gap-1 shrink-0">' +
+              '<img src="'+hpQrSrc+'" class="w-16 h-16 rounded-lg border border-indigo-200 object-contain bg-white" alt="HP QR">' +
+              (d.urlHp?'<a href="'+d.urlHp+'" target="_blank" class="text-[10px] text-indigo-500 font-black hover:underline whitespace-nowrap">HPを見る↗</a>':'') +
+              '</div>'
+            : hpQrUrl
+                ? '<div class="flex flex-col items-center gap-1 shrink-0">' +
+                  '<div data-qr-url="'+hpQrUrl+'" data-qr-size="64" class="flex justify-center w-16 h-16"></div>' +
+                  '<a href="'+hpQrUrl+'" target="_blank" class="text-[10px] text-indigo-500 font-black hover:underline whitespace-nowrap">HPを見る↗</a>' +
+                  '</div>'
+                : (d.urlHp
+                    ? '<div class="flex flex-col items-center justify-center gap-1 shrink-0 w-16">' +
+                      '<div class="w-16 h-16 bg-indigo-50 rounded-lg border border-indigo-200 flex items-center justify-center text-indigo-300 text-[10px] font-bold text-center leading-tight px-1">HP<br>QR未登録</div>' +
+                      '<a href="'+d.urlHp+'" target="_blank" class="text-[10px] text-indigo-500 font-black hover:underline whitespace-nowrap">HPを見る↗</a>' +
+                      '</div>'
+                    : '');
+
+        // 🟢 エントリー用QR（下部・大きめ）
+        const entrySrc = d.qrStorageUrl || d.qrImage;
+        const entryUrl = d.qrData || d.url;
+        const entryQrBlock = entrySrc
+            ? '<div class="bg-emerald-50 rounded-2xl p-3 border border-emerald-100 text-center">' +
+              '<p class="text-[10px] text-emerald-700 font-black mb-2">🟢 申し込む（QRをスマホで読み取ってください）</p>' +
+              '<img src="'+entrySrc+'" class="w-28 h-28 mx-auto rounded-xl object-contain border border-emerald-200" alt="エントリーQR">' +
+              (d.url?'<a href="'+d.url+'" target="_blank" class="mt-2 w-full '+(hasUpcoming&&days===0?'bg-red-500':hasUpcoming&&days<=3?'bg-orange-500':hasUpcoming&&days<=7?'bg-amber-500':'bg-emerald-500')+' text-white font-bold py-2.5 rounded-xl flex items-center justify-center gap-1.5 hover:opacity-90 transition-all text-xs">🟢 申し込む <i data-lucide="external-link" class="w-3.5 h-3.5"></i></a>':'') +
+              '</div>'
+            : entryUrl
+                ? '<div class="bg-emerald-50 rounded-2xl p-3 border border-emerald-100 text-center">' +
+                  '<p class="text-[10px] text-emerald-700 font-black mb-2">🟢 申し込む（QRをスマホで読み取ってください）</p>' +
+                  '<div data-qr-url="'+entryUrl+'" class="flex justify-center mb-2"></div>' +
+                  '<a href="'+entryUrl+'" target="_blank" class="mt-1 w-full '+(hasUpcoming&&days===0?'bg-red-500':hasUpcoming&&days<=3?'bg-orange-500':hasUpcoming&&days<=7?'bg-amber-500':'bg-emerald-500')+' text-white font-bold py-2.5 rounded-xl flex items-center justify-center gap-1.5 hover:opacity-90 transition-all text-xs">🟢 申し込む <i data-lucide="external-link" class="w-3.5 h-3.5"></i></a>' +
+                  '</div>'
+                : (!(d.urlHp)
+                    ? '<div class="w-full bg-slate-100 text-slate-400 font-bold py-3 rounded-xl text-center text-xs">お問い合わせ先は担当キャリアカウンセラーへ</div>'
+                    : '');
+
+        return '<div class="bg-white p-6 rounded-[32px] border '+cardBorder+' shadow-sm hover:shadow-lg transition-all flex flex-col">' +
+            // ── ヘッダー：業界タグ + 厳選バッジ ──
+            '<div class="flex justify-between items-start mb-3">' +
+            '<span class="px-3 py-1 rounded-full text-[10px] font-black '+(CC[d.cate]||'cate-other')+'">'+(d.cate||'その他')+'</span>' +
+            (d.curated?'<span class="text-[10px] bg-amber-100 text-amber-700 px-2 py-1 rounded-full font-black">⭐ 厳選</span>':'')+
+            '</div>' +
+            // ── 企業名 + HP用QR（横並び） ──
+            '<div class="flex items-start justify-between gap-3 mb-3">' +
+            '<h5 class="text-xl font-black text-slate-800 line-clamp-2 flex-1">'+d.name+'</h5>' +
+            hpQrBlock +
+            '</div>' +
+            // ── 次回開催日バッジ ──
+            nextDateHTML +
+            // ── 先生コメント ──
+            '<div class="bg-slate-50 p-4 rounded-2xl mb-4 flex-grow border border-slate-100">' +
+            '<p class="text-slate-600 text-sm font-bold leading-relaxed line-clamp-3">'+(d.desc||'')+'</p></div>' +
+            // ── 日程・終了日 ──
+            '<div class="space-y-2 mt-auto">' +
+            (d.dates?'<div class="bg-slate-50 p-3 rounded-xl border border-slate-100 text-[11px] leading-relaxed font-bold">📅 '+coloredDates+'</div>':'') +
+            (d.endDate?'<div class="text-[11px] text-slate-400 font-bold px-1">🗓 掲載終了: '+d.endDate+'</div>':'') +
+            // ── エントリー用QR（下部） ──
+            entryQrBlock +
+            '</div></div>';
+    }).join('');
+    lucide.createIcons();
+    generateQRCodes();
+}
+
+function drawAdmin() {
+    const el=document.getElementById('admin-list'), cnt=document.getElementById('admin-count');
+    if (!el) return;
+    const kw=(document.getElementById('admin-search')?.value||'').toLowerCase();
+    const ca=document.getElementById('admin-cate-filter')?.value||'all';
+    const st=document.getElementById('admin-status-filter')?.value||'all';
+    const filtered=companies.filter(d=>{
+        const sk=d.name?.toLowerCase().includes(kw);
+        const sc=ca==='all'||d.cate===ca;
+        const ex=expired(d);
+        const ss=st==='all'||(st==='active'&&!ex)||(st==='expired'&&ex);
+        return sk&&sc&&ss;
+    });
+    if(cnt) cnt.textContent=companies.length+'件';
+    if(!filtered.length){el.innerHTML='<div class="p-12 text-center text-slate-400 font-bold">該当する企業がありません</div>';lucide.createIcons();return;}
+    el.innerHTML=filtered.map(d=>{
+        const ex=expired(d);
+        const lbl=d.endDate?'終了日:'+d.endDate:(d.active===false?'手動終了':'無期限');
+        return '<div class="p-5 flex flex-col md:flex-row items-start md:items-center justify-between hover:bg-slate-50 gap-4 border-b border-slate-100'+(ex?' opacity-60':'')+'">' +
+            '<div class="flex-1 min-w-0"><div class="flex items-center gap-2 flex-wrap">' +
+            '<span class="font-black text-slate-800 text-sm">'+d.name+'</span>' +
+            '<span class="text-[10px] px-2 py-0.5 rounded font-black '+(CC[d.cate]||'cate-other')+'">'+(d.cate||'')+'</span>' +
+            (d.curated&&!ex?'<span class="text-[10px] bg-amber-100 text-amber-700 px-2 py-0.5 rounded font-black">⭐ 厳選中</span>':'') +
+            (ex?'<span class="text-[10px] bg-slate-200 text-slate-500 px-2 py-0.5 rounded font-black">📴 終了（学生非表示）</span>':'<span class="text-[10px] bg-emerald-100 text-emerald-700 px-2 py-0.5 rounded font-black">✅ 掲載中</span>') +
+            '</div><div class="text-[11px] text-slate-400 font-bold mt-1">'+(d.method||'—')+' ／ '+(d.dates||'日程未定')+' ／ '+lbl+
+            ((d.qrStorageUrlHp||d.qrImageHp||d.urlHp)?'<span class="ml-2 text-indigo-500 font-black">🔵 HP登録済</span>':'')+
+            ((d.qrStorageUrl||d.qrData||d.qrImage||d.url)?'<span class="ml-2 text-emerald-500 font-black">🟢 エントリー登録済</span>':d.hasQr?'<span class="ml-2 text-orange-500 font-black">⚠ QRあり・URL未取得</span>':'<span class="ml-2 text-slate-400 font-black">QRなし</span>')+'</div></div>' +
+            '<div class="flex items-center gap-2 flex-wrap shrink-0">' +
+            '<button onclick="window._toggleActive(\''+d.id+'\','+ex+')" class="text-[11px] font-black px-4 py-2.5 rounded-2xl border flex items-center gap-1.5 transition-all '+(ex?'bg-emerald-50 text-emerald-700 border-emerald-200 hover:bg-emerald-500 hover:text-white hover:border-transparent':'bg-slate-100 text-slate-500 border-slate-200 hover:bg-orange-500 hover:text-white hover:border-transparent')+'">' +
+            '<i data-lucide="'+(ex?'play-circle':'pause-circle')+'" class="w-3.5 h-3.5"></i>'+(ex?'掲載再開':'掲載終了')+'</button>' +
+            (!ex?'<button onclick="window._toggleCurated(\''+d.id+'\','+!!d.curated+')" class="text-[11px] font-black px-4 py-2.5 rounded-2xl border flex items-center gap-1.5 transition-all '+(d.curated?'bg-amber-50 text-amber-700 border-amber-200 hover:bg-amber-500 hover:text-white hover:border-transparent':'bg-indigo-50 text-indigo-600 border-indigo-100 hover:bg-indigo-600 hover:text-white hover:border-transparent')+'">' +
+            '<i data-lucide="'+(d.curated?'star-off':'star')+'" class="w-3.5 h-3.5"></i>'+(d.curated?'厳選解除':'厳選に追加')+'</button>':'') +
+            '<button onclick="window._openEdit(\''+d.id+'\')" class="text-[11px] bg-slate-100 text-slate-600 font-black px-4 py-2.5 rounded-2xl hover:bg-slate-200 border border-slate-200 flex items-center gap-1.5"><i data-lucide="pencil" class="w-3.5 h-3.5"></i> 編集</button>' +
+            '<button onclick="window._del(\''+d.id+'\',\''+esc(d.name)+'\')" class="text-[11px] bg-red-50 text-red-600 font-black px-4 py-2.5 rounded-2xl hover:bg-red-500 hover:text-white border border-red-200 hover:border-transparent flex items-center gap-1.5"><i data-lucide="trash-2" class="w-3.5 h-3.5"></i> 削除</button>' +
+            '</div></div>';
+    }).join('');
+    lucide.createIcons();
+}
+
+// ── グローバル操作 ──
+const isLocal = id => id.startsWith('local-');
+const warnLocal = () => alert('Firebase接続後に操作できます。数秒待ってから再試行してください。');
+window._toggleActive = async(id,wasExp)=>{ if(isLocal(id)){warnLocal();return;} try{await colRef().doc(id).update(wasExp?{active:true,endDate:''}:{active:false});}catch(e){alert('更新失敗');console.error(e);} };
+window._toggleCurated= async(id,cur)  =>{ if(isLocal(id)){warnLocal();return;} try{await colRef().doc(id).update({curated:!cur});}catch(e){alert('更新失敗');console.error(e);} };
+window._del           = async(id,name)=>{ if(isLocal(id)){warnLocal();return;} if(!confirm('「'+name+'」を削除しますか？')) return; try{await colRef().doc(id).delete();}catch(e){alert('削除失敗');console.error(e);} };
+
+// ── _openEdit ──
+window._openEdit = id => {
+    const d=companies.find(c=>c.id===id); if(!d) return;
+    document.getElementById('edit-doc-id').value  = id;
+    document.getElementById('edit-name').value    = d.name   ||'';
+    document.getElementById('edit-cate').value    = d.cate   ||'IT・ソフトウェア';
+    document.getElementById('edit-method').value  = d.method ||'';
+    document.getElementById('edit-dates').value   = d.dates  ||'';
+    document.getElementById('edit-months').value  = (d.months||[]).join(',');
+    document.getElementById('edit-desc').value    = d.desc   ||'';
+    document.getElementById('edit-url-hp').value  = d.urlHp  ||'';
+    document.getElementById('edit-url').value     = d.url    ||'';
+    document.getElementById('edit-enddate').value = d.endDate||'';
+    document.getElementById('edit-modal-title').textContent='編集：'+d.name;
+
+    // 🔵 HP用QRプレビュー
+    const editQrPreviewHp = document.getElementById('edit-qr-preview-hp');
+    const previewHpSrc = d.qrStorageUrlHp || d.qrImageHp || '';
+    document.getElementById('edit-qr-data-hp').value = '';
+    if (previewHpSrc) {
+        editQrPreviewHp.innerHTML = '<img src="'+previewHpSrc+'" class="w-24 h-24 mx-auto object-contain rounded-xl border border-indigo-200"><p class="text-[10px] text-indigo-600 font-bold mt-1">登録済み HP用QR</p>';
+        document.getElementById('edit-qr-clear-hp').classList.remove('hidden');
+    } else {
+        editQrPreviewHp.textContent = '📷 HP用QR画像を選択（PNG・JPG）';
+        document.getElementById('edit-qr-clear-hp').classList.add('hidden');
+    }
+
+    // 🟢 エントリー用QRプレビュー
+    const editQrPreview = document.getElementById('edit-qr-preview');
+    const previewSrc = d.qrStorageUrl || d.qrImage || '';
+    document.getElementById('edit-qr-data').value = '';
+    if (previewSrc) {
+        editQrPreview.innerHTML = '<img src="'+previewSrc+'" class="w-24 h-24 mx-auto object-contain rounded-xl border border-emerald-200"><p class="text-[10px] text-emerald-600 font-bold mt-1">登録済み エントリー用QR</p>';
+        document.getElementById('edit-qr-clear').classList.remove('hidden');
+    } else {
+        editQrPreview.textContent = '📷 エントリー用QR画像を選択（PNG・JPG）';
+        document.getElementById('edit-qr-clear').classList.add('hidden');
+    }
+    document.getElementById('edit-modal').classList.remove('hidden');
+};
+
+// ── Firebase起動 ──
+const connBadge = () => document.getElementById('conn-status').style.display='flex';
+async function startFirebase() {
+    try {
+        await auth.signInAnonymously();
+    } catch(e){
+        console.warn('匿名認証失敗:', e.code, e.message);
+        // auth/configuration-not-found → Firebaseコンソールで匿名認証が無効
+        // auth/network-request-failed  → オフラインまたはCORSブロック
+        connBadge();
+        document.querySelector('#conn-status p.font-black').textContent =
+            'Firebase未接続（' + (e.code||e.message) + '）';
+        return;
+    }
+    auth.onAuthStateChanged(async user => {
+        if (!user){ connBadge(); return; }
+        // 初期データ投入チェック（まだ1件もなければINITを投入）
+        try{
+            const snap = await metaR().get();
+            if(!snap.exists){
+                for(const d of INIT) await colRef().add({...d,curated:false,active:true,endDate:'',dateAdded:new Date().toISOString()});
+                await metaR().set({initialized:true,at:new Date().toISOString()});
+            }
+        }catch(e){ console.warn('初期投入スキップ:', e.code, e.message); }
+        // リアルタイム同期（空でも購読継続）
+        colRef().orderBy('dateAdded','desc').onSnapshot(snap=>{
+            document.getElementById('conn-status').style.display='none';
+            companies = snap.docs.map(d=>({id:d.id,...d.data()}));
+            redrawAll();
+        }, err=>{
+            console.error('Firestore同期エラー:', err.code, err.message);
+            connBadge();
+            document.querySelector('#conn-status p.font-black').textContent =
+                'Firestore接続エラー（' + (err.code||err.message) + '）';
+        });
+    });
+}
+
+// ── DOMContentLoaded ──
+window.addEventListener('DOMContentLoaded', () => {
+    // 固定データで即時表示
+    companies=INIT.map((d,i)=>({...d,id:'local-'+i,curated:false,active:true,endDate:''}));
+    redrawAll();
+
+    // 学生フィルター
+    ['bulk-search','cateFilter','monthFilter','methodFilter'].forEach(id=>{
+        document.getElementById(id)?.addEventListener('input',drawBulk);
+        document.getElementById(id)?.addEventListener('change',drawBulk);
+    });
+    document.getElementById('sort-date')?.addEventListener('click',()=>{
+        sortMode=sortMode==='date-asc'?'date-desc':'date-asc';
+        document.getElementById('sort-date-label').textContent=sortMode==='date-asc'?'開催日が近い順':'開催日が遠い順';
+        document.getElementById('sort-cate').classList.remove('text-indigo-600');
+        document.getElementById('sort-cate').classList.add('text-slate-400');
+        drawBulk(); lucide.createIcons();
+    });
+    document.getElementById('sort-cate')?.addEventListener('click',()=>{
+        sortMode='cate';
+        document.getElementById('sort-cate').classList.add('text-indigo-600');
+        document.getElementById('sort-cate').classList.remove('text-slate-400');
+        document.getElementById('sort-date-label').textContent='開催日が近い順';
+        drawBulk(); lucide.createIcons();
+    });
+
+    // 管理フィルター
+    ['admin-search','admin-cate-filter','admin-status-filter'].forEach(id=>{
+        document.getElementById(id)?.addEventListener('input',drawAdmin);
+        document.getElementById(id)?.addEventListener('change',drawAdmin);
+    });
+
+    // ログイン
+    const modal=document.getElementById('login-modal');
+    document.getElementById('btn-show-login').addEventListener('click',()=>{ modal.classList.remove('hidden'); document.getElementById('admin-pw').focus(); });
+    document.getElementById('btn-login-cancel').addEventListener('click',()=>{ modal.classList.add('hidden'); document.getElementById('login-error').classList.add('hidden'); document.getElementById('admin-pw').value=''; });
+    const doLogin=()=>{
+        if(document.getElementById('admin-pw').value==='7118'){
+            modal.classList.add('hidden');
+            document.getElementById('admin-pw').value='';
+            document.getElementById('login-error').classList.add('hidden');
+            isAdmin=true;
+            document.getElementById('student-view').classList.add('hidden');
+            document.getElementById('admin-view').classList.remove('hidden');
+            document.getElementById('nav-student').classList.replace('text-indigo-600','text-slate-400');
+            document.getElementById('nav-student').classList.remove('bg-indigo-50');
+            drawAdmin(); lucide.createIcons();
+        } else { document.getElementById('login-error').classList.remove('hidden'); }
+    };
+    document.getElementById('btn-login-submit').addEventListener('click',doLogin);
+    document.getElementById('admin-pw').addEventListener('keydown',e=>{ if(e.key==='Enter') doLogin(); });
+
+    // ログアウト
+    const goStudent=()=>{ isAdmin=false; document.getElementById('admin-view').classList.add('hidden'); document.getElementById('student-view').classList.remove('hidden'); document.getElementById('nav-student').classList.replace('text-slate-400','text-indigo-600'); document.getElementById('nav-student').classList.add('bg-indigo-50'); };
+    document.getElementById('btn-logout').addEventListener('click',goStudent);
+    document.getElementById('nav-student').addEventListener('click',goStudent);
+
+    // 編集モーダル
+    document.getElementById('btn-edit-cancel').addEventListener('click',()=>document.getElementById('edit-modal').classList.add('hidden'));
+    document.getElementById('edit-modal').addEventListener('click', e => { if (e.target === document.getElementById('edit-modal')) document.getElementById('edit-modal').classList.add('hidden'); });
+    document.getElementById('btn-edit-save').addEventListener('click',async()=>{
+        const id=document.getElementById('edit-doc-id').value;
+        const months=document.getElementById('edit-months').value.split(',').map(s=>parseInt(s.trim())).filter(n=>!isNaN(n));
+        const existingDoc = companies.find(c=>c.id===id) || {};
+
+        // 🔵 HP用QR処理
+        const rawQrHp = document.getElementById('edit-qr-data-hp').value || '';
+        let editQrStorageUrlHp = existingDoc.qrStorageUrlHp || '';
+        let editQrImageHp = existingDoc.qrImageHp || '';
+        if (rawQrHp === '__clear__') {
+            editQrStorageUrlHp = ''; editQrImageHp = '';
+        } else if (rawQrHp.startsWith('data:image')) {
+            const su = await uploadQRToStorage(rawQrHp, (document.getElementById('edit-name').value.trim()||'qr')+'_hp');
+            if (su) { editQrStorageUrlHp = su; editQrImageHp = ''; }
+            else {
+                const c = await compressImage(rawQrHp, 180, 0.75);
+                if (c) editQrImageHp = c;
+            }
+        }
+
+        // 🟢 エントリー用QR処理
+        const rawQrEdit = document.getElementById('edit-qr-data').value || '';
+        let editQrStorageUrl = existingDoc.qrStorageUrl || '';
+        let editQrImage = existingDoc.qrImage || '';
+        if (rawQrEdit === '__clear__') {
+            editQrStorageUrl = ''; editQrImage = '';
+        } else if (rawQrEdit.startsWith('data:image')) {
+            const su = await uploadQRToStorage(rawQrEdit, document.getElementById('edit-name').value.trim() || 'qr');
+            if (su) { editQrStorageUrl = su; editQrImage = ''; }
+            else {
+                const c = await compressImage(rawQrEdit, 180, 0.75);
+                if (c) editQrImage = c;
+            }
+        }
+
+        const editUrl    = document.getElementById('edit-url').value.trim();
+        const editUrlHp  = document.getElementById('edit-url-hp').value.trim();
+        const u = {
+            name:    document.getElementById('edit-name').value.trim(),
+            cate:    document.getElementById('edit-cate').value,
+            method:  document.getElementById('edit-method').value.trim(),
+            dates:   document.getElementById('edit-dates').value.trim(),
+            months,
+            desc:    document.getElementById('edit-desc').value.trim(),
+            urlHp:   editUrlHp,
+            url:     editUrl,
+            endDate: document.getElementById('edit-enddate').value || '',
+            qrStorageUrlHp: editQrStorageUrlHp,
+            qrImageHp: editQrImageHp,
+            qrStorageUrl: editQrStorageUrl,
+            qrImage: editQrImage,
+            qrData:  editUrl || existingDoc.qrData || '',
+            active: true
+        };
+        if(!u.name||!u.desc){alert('企業名と紹介文は必須です。');return;}
+        try{ await colRef().doc(id).update(u); document.getElementById('edit-modal').classList.add('hidden'); }
+        catch(e){alert('更新失敗');console.error(e);}
+    });
+
+    // 手動追加
+    document.getElementById('add-form').addEventListener('submit',async e=>{
+        e.preventDefault();
+        const months=document.getElementById('form-months').value.split(',').map(s=>parseInt(s.trim())).filter(n=>!isNaN(n));
+
+        // 🔵 HP用QR
+        const rawQrHpForm = document.getElementById('form-qr-data-hp').value || '';
+        let formQrStorageUrlHp = '';
+        let formQrImageHp = '';
+        if (rawQrHpForm && rawQrHpForm.startsWith('data:image')) {
+            formQrStorageUrlHp = await uploadQRToStorage(rawQrHpForm, (document.getElementById('form-name').value.trim()||'qr')+'_hp');
+            if (!formQrStorageUrlHp) {
+                const c = await compressImage(rawQrHpForm, 180, 0.75);
+                if (c) formQrImageHp = c;
+            }
+        }
+
+        // 🟢 エントリー用QR
+        const rawQrForm = document.getElementById('form-qr-data').value || '';
+        let formQrStorageUrl = '';
+        if (rawQrForm && rawQrForm.startsWith('data:image')) {
+            formQrStorageUrl = await uploadQRToStorage(rawQrForm, document.getElementById('form-name').value.trim() || 'qr');
+        }
+
+        const formUrlHp = document.getElementById('form-url-hp').value.trim() || '';
+        const formUrl   = document.getElementById('form-url').value.trim() || '';
+        const item = {
+            name:    document.getElementById('form-name').value.trim(),
+            cate:    document.getElementById('form-cate').value,
+            method:  document.getElementById('form-method').value.trim(),
+            dates:   document.getElementById('form-dates').value.trim(),
+            months,
+            desc:    document.getElementById('form-desc').value.trim(),
+            urlHp:   formUrlHp,
+            url:     formUrl,
+            endDate: document.getElementById('form-enddate').value || '',
+            qrStorageUrlHp: formQrStorageUrlHp,
+            qrImageHp: formQrImageHp,
+            qrStorageUrl: formQrStorageUrl,
+            qrImage: '',
+            qrData:  formUrl || '',
+            active:true, curated:false, dateAdded:new Date().toISOString()
+        };
+        if(!item.name||!item.desc){alert('企業名と紹介文は必須です。');return;}
+        try{
+            const result = await upsertCompany(item);
+            e.target.reset();
+            document.getElementById('form-qr-preview-hp').textContent = '📷 HP用QR画像を選択';
+            document.getElementById('form-qr-preview').textContent = '📷 エントリー用QR画像を選択';
+            alert(result === 'updated'
+                ? '「'+item.name+'」は既に登録されていたため、最新データで上書きしました。'
+                : '「'+item.name+'」を追加しました。');
+        }
+        catch(err){alert('追加失敗。Firebase接続を確認してください。');console.error(err);}
+    });
+
+    // タブ切替
+    document.getElementById('tab-pdf').addEventListener('click',()=>{
+        document.getElementById('panel-pdf').classList.remove('hidden');
+        document.getElementById('panel-manual').classList.add('hidden');
+        document.getElementById('tab-pdf').className='px-5 py-2.5 rounded-2xl text-xs font-black bg-indigo-600 text-white transition-all';
+        document.getElementById('tab-manual').className='px-5 py-2.5 rounded-2xl text-xs font-black bg-white/10 text-indigo-200 hover:bg-white/20 transition-all';
+    });
+    document.getElementById('tab-manual').addEventListener('click',()=>{
+        document.getElementById('panel-manual').classList.remove('hidden');
+        document.getElementById('panel-pdf').classList.add('hidden');
+        document.getElementById('tab-manual').className='px-5 py-2.5 rounded-2xl text-xs font-black bg-indigo-600 text-white transition-all';
+        document.getElementById('tab-pdf').className='px-5 py-2.5 rounded-2xl text-xs font-black bg-white/10 text-indigo-200 hover:bg-white/20 transition-all';
+    });
+
+    // PDF解析
+    let parsedPdfItems=[];
+    const resetPdf=()=>{ parsedPdfItems=[]; document.getElementById('pdf-result-area').classList.add('hidden'); document.getElementById('pdf-drop-zone').classList.remove('hidden'); document.getElementById('pdf-file-name').textContent=''; document.getElementById('pdf-file-input').value=''; };
+
+    // ── クライアント側QRスキャン（PDF.js + jsQR）→ QR画像切抜き → Storage upload ──
+    async function scanQRFromPDFBase64(base64) {
+        if (typeof pdfjsLib === 'undefined' || typeof jsQR === 'undefined') return [];
+        try {
+            pdfjsLib.GlobalWorkerOptions.workerSrc =
+                'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+            const binary = atob(base64);
+            const bytes = new Uint8Array(binary.length);
+            for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
+            const pdf = await pdfjsLib.getDocument({ data: bytes }).promise;
+            // { url, croppedBase64 } の配列
+            const found = [];
+            const seenUrls = new Set();
+            for (let p = 1; p <= pdf.numPages; p++) {
+                const page = await pdf.getPage(p);
+                // 2倍スケール → QR検出精度向上
+                const vp = page.getViewport({ scale: 2.0 });
+                const canvas = document.createElement('canvas');
+                canvas.width  = vp.width;
+                canvas.height = vp.height;
+                const ctx = canvas.getContext('2d');
+                await page.render({ canvasContext: ctx, viewport: vp }).promise;
+                const imgData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+                const code = jsQR(imgData.data, canvas.width, canvas.height, {
+                    inversionAttempts: 'attemptBoth'
+                });
+                if (code && code.data && !seenUrls.has(code.data)) {
+                    seenUrls.add(code.data);
+                    console.log('✅ QRコード検出（p.' + p + '):', code.data);
+
+                    // ── QRコード領域を切り抜いて縮小 ──
+                    const loc = code.location;
+                    const xs = [loc.topLeftCorner.x, loc.topRightCorner.x, loc.bottomLeftCorner.x, loc.bottomRightCorner.x];
+                    const ys = [loc.topLeftCorner.y, loc.topRightCorner.y, loc.bottomLeftCorner.y, loc.bottomRightCorner.y];
+                    const pad = 20;
+                    const cx = Math.max(0, Math.min(...xs) - pad);
+                    const cy = Math.max(0, Math.min(...ys) - pad);
+                    const cw = Math.min(canvas.width  - cx, Math.max(...xs) - Math.min(...xs) + pad*2);
+                    const ch = Math.min(canvas.height - cy, Math.max(...ys) - Math.min(...ys) + pad*2);
+
+                    const cropCanvas = document.createElement('canvas');
+                    cropCanvas.width  = 240;
+                    cropCanvas.height = 240;
+                    cropCanvas.getContext('2d').drawImage(canvas, cx, cy, cw, ch, 0, 0, 240, 240);
+                    const croppedBase64 = cropCanvas.toDataURL('image/png');
+
+                    found.push({ url: code.data, croppedBase64 });
+                }
+            }
+            return found;
+        } catch (e) {
+            console.warn('クライアント側QRスキャン失敗:', e);
+            return [];
+        }
+    }
+
+    const analyzePdf=async file=>{
+        if(!file||file.type!=='application/pdf'){alert('PDFファイルを選択してください。');return;}
+        document.getElementById('pdf-file-name').textContent=file.name;
+        document.getElementById('pdf-drop-zone').classList.add('hidden');
+        document.getElementById('pdf-analyzing').classList.remove('hidden');
+        document.getElementById('pdf-result-area').classList.add('hidden');
+        try{
+            const base64=await new Promise((res,rej)=>{ const r=new FileReader(); r.onload=()=>res(r.result.split(',')[1]); r.onerror=rej; r.readAsDataURL(file); });
+
+            // API呼び出し と クライアント側QRスキャン を並列実行
+            const prompt='このPDFを解析して、企業の説明会情報をJSON配列形式のみで出力してください。説明文不要。項目: name(企業名), cate(業界: IT・ソフトウェア/医療・福祉・介護/商社・小売・外食/金融・建設・その他/その他), method(開催形式), dates(日程テキスト 例:4/15, 22, 28), months(開催月の数字配列 例:[4,5]), desc(紹介文100字以内), urlHp(企業名でGoogle検索して公式採用ページのURLを調べて入力。マイナビ等の就職サイトは除く。なければ空文字), url(マイナビ・リクナビ・LINE等のエントリーURL。PDFに記載があれば入力。なければ空文字), qrImage(PDFにQRコードの画像がある場合そのQRコード部分だけ切り取ってBase64で出力 例:data:image/png;base64,...  なければ空文字), qrUrl(QRコードに書かれているURLが読み取れた場合のみ出力。読めなければ空文字)';
+            const [apiRes, clientQrScans] = await Promise.all([
+                fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:2000,messages:[{role:'user',content:[{type:'document',source:{type:'base64',media_type:'application/pdf',data:base64}},{type:'text',text:prompt}]}]})}).then(r=>r.json()),
+                scanQRFromPDFBase64(base64)
+            ]);
+
+            const text = apiRes.content?.[0]?.text || '';
+            const m = text.match(/\[[\s\S]*\]/);
+            if (!m) throw new Error('JSONが見つかりませんでした。');
+            parsedPdfItems = JSON.parse(m[0]);
+
+            // ── クライアント側QRスキャン結果をマージ ──
+            // clientQrScans = [{ url, croppedBase64 }, ...]
+            // AI結果より信頼性が高いため、検出できた場合は優先使用
+            if (clientQrScans.length > 0) {
+                parsedPdfItems = parsedPdfItems.map((item, i) => {
+                    // 複数企業のとき、i番目のスキャン結果、なければ最初の結果を使う
+                    const scan = clientQrScans[i] || clientQrScans[0];
+                    return {
+                        ...item,
+                        qrUrl:   scan.url           || item.qrUrl  || '',
+                        url:     item.url            || scan.url    || '',
+                        qrImage: scan.croppedBase64  || item.qrImage || ''
+                    };
+                });
+                console.log('✅ クライアント側QRスキャン補完:', clientQrScans.map(s=>s.url));
+            }
+
+            document.getElementById('pdf-preview').innerHTML=parsedPdfItems.map((item,i)=>{
+                const hasQr = item.qrImage || item.qrUrl || item.url;
+                return '<div class="bg-white/10 rounded-xl p-3 text-xs">' +
+                    '<p class="font-black text-white">'+(i+1)+'. '+(item.name||'不明')+'</p>' +
+                    '<p class="text-indigo-300 mt-1">'+(item.cate||'')+' ／ '+(item.dates||'日程未定')+'</p>' +
+                    '<p class="text-indigo-400 mt-0.5 line-clamp-2">'+(item.desc||'')+'</p>' +
+                    (item.qrImage ? '<p class="text-emerald-400 mt-1 text-[10px]">✅ QR画像を切り抜き済み（Storage登録予定）</p>' :
+                     item.qrUrl   ? '<p class="text-sky-400 mt-1 text-[10px]">✅ QR URL読み取り済み</p>' :
+                     item.url     ? '<p class="text-indigo-400 mt-1 text-[10px]">🔗 URLあり</p>' :
+                                    '<p class="text-amber-400 mt-1 text-[10px]">⚠ QRコード・URLなし</p>') +
+                    '</div>';
+            }).join('');
+            document.getElementById('pdf-analyzing').classList.add('hidden');
+            document.getElementById('pdf-result-area').classList.remove('hidden');
+        }catch(e){
+            console.error('PDF解析エラー:',e);
+            document.getElementById('pdf-analyzing').classList.add('hidden');
+            document.getElementById('pdf-drop-zone').classList.remove('hidden');
+            alert('PDF解析に失敗しました。\n'+e.message);
+        }
+    };
+    document.getElementById('pdf-file-input').addEventListener('change',e=>{ const f=e.target.files[0]; if(f) analyzePdf(f); });
+    const dz=document.getElementById('pdf-drop-zone');
+    dz.addEventListener('dragover',e=>{ e.preventDefault(); dz.style.borderColor='#818cf8'; });
+    dz.addEventListener('dragleave',()=>{ dz.style.borderColor=''; });
+    dz.addEventListener('drop',e=>{ e.preventDefault(); dz.style.borderColor=''; const f=e.dataTransfer.files[0]; if(f) analyzePdf(f); });
+    dz.addEventListener('click',()=>document.getElementById('pdf-file-input').click());
+    document.getElementById('btn-pdf-import').addEventListener('click',async()=>{
+        if(!parsedPdfItems.length) return;
+        let count=0;
+        const btn = document.getElementById('btn-pdf-import');
+        const restoreBtn = () => { btn.disabled=false; btn.textContent='登録する'; };
+        btn.disabled = true; btn.textContent = '準備中...';
+        const errors = [];
+        try {
+            for(let pi=0; pi<parsedPdfItems.length; pi++){
+                const d = parsedPdfItems[pi];
+                btn.textContent = `登録中 ${pi+1}/${parsedPdfItems.length}件目...`;
+                const months=Array.isArray(d.months)?d.months.map(Number).filter(n=>!isNaN(n)):String(d.months||'').split(',').map(s=>parseInt(s.trim())).filter(n=>!isNaN(n));
+                let qrStorageUrl = '', qrImageFallback = '';
+                let resolvedQrData = d.qrUrl || '';
+                let resolvedUrl = d.url || d.qrUrl || '';
+                if (d.qrImage && d.qrImage.startsWith('data:image')) {
+                    btn.textContent = `${pi+1}/${parsedPdfItems.length}: QR Storage登録中...`;
+                    const su = await uploadQRToStorage(d.qrImage, d.name||'qr');
+                    if (su) {
+                        qrStorageUrl = su;
+                    } else {
+                        btn.textContent = `${pi+1}/${parsedPdfItems.length}: QR圧縮中...`;
+                        const c = await compressImage(d.qrImage, 180, 0.75);
+                        if (c) qrImageFallback = c;
+                    }
+                }
+                try{
+                    btn.textContent = `${pi+1}/${parsedPdfItems.length}: Firestore登録中...`;
+                    const res = await upsertCompany({
+                        name:d.name||'不明', cate:d.cate||'その他', method:d.method||'',
+                        dates:d.dates||'', months, desc:d.desc||'',
+                        url:resolvedUrl, qrData:resolvedQrData,
+                        qrStorageUrl, qrImage:qrImageFallback,
+                        hasQr: !!(d.qrImage || d.qrUrl || d.url),
+                        endDate:'', active:true, curated:false, dateAdded:new Date().toISOString()
+                    });
+                    if (res === 'updated') btn.textContent = `${pi+1}/${parsedPdfItems.length}: 上書き更新`;
+                    count++;
+                } catch(e){ console.error(e); errors.push(d.name+': '+e.message); }
+            }
+        } catch(e){ errors.push('予期しないエラー: '+e.message); }
+        finally {
+            restoreBtn();
+            if(errors.length) alert(count+'件登録。エラー:\n'+errors.slice(0,3).join('\n'));
+            else alert(count+'件の企業データを登録しました！');
+            resetPdf();
+        }
+    });
+
+    // QR保護モードのON/OFFラベル更新
+    document.getElementById('qr-protect-mode')?.addEventListener('change', function() {
+        document.getElementById('qr-protect-label').textContent = this.checked ? 'ON' : 'OFF';
+    });
+
+    // AI JSONマージ
+    document.getElementById('btn-import-json').addEventListener('click', async () => {
+    const raw = document.getElementById('ai-json-input').value.trim();
+    if (!raw) return;
+    const protectMode = document.getElementById('qr-protect-mode')?.checked ?? true;
+
+    let items;
+    try {
+        const parsed = JSON.parse(raw);
+        items = Array.isArray(parsed) ? parsed : [parsed];
+    } catch {
+        alert('JSON形式エラー。\n[ で始まり ] で終わる部分だけ貼り付けてください。');
+        return;
+    }
+
+    const importBtn = document.getElementById('btn-import-json');
+    const restoreBtn = () => {
+        importBtn.disabled = false;
+        importBtn.innerHTML = '<i data-lucide="zap" class="w-6 h-6"></i> 貼り付けたデータを登録する';
+        lucide.createIcons();
+    };
+    importBtn.disabled = true;
+    importBtn.textContent = '準備中...';
+
+    let n = 0;
+    let nUpdated = 0;
+    let nSkipped = 0;
+    const errors = [];
+
+    try {
+        for (let idx = 0; idx < items.length; idx++) {
+            const d = items[idx];
+            importBtn.textContent = `登録中 ${idx+1}/${items.length}件目...`;
+
+            const qrUrl = (d.qrUrl || '').trim();
+            let resolvedUrl    = (d.url || '').trim() || qrUrl;
+            let resolvedQrData = qrUrl || (d.qrData || '').trim();
+            let qrStorageUrl   = '';
+            let qrImageFallback = '';
+
+            // QR保護モード: 既存データにQR/URLがある場合は上書きしない
+            if (protectMode) {
+                const existing = companies.find(c => (c.name||'').trim() === (d.name||'').trim());
+                if (existing && (existing.qrStorageUrl || existing.qrImage || existing.qrData || existing.url ||
+                                 existing.qrStorageUrlHp || existing.qrImageHp || existing.urlHp)) {
+                    // QR保護モードON → 日程・コメントのみ更新
+                    try {
+                        importBtn.textContent = `${idx+1}/${items.length}: QR保護モードで更新中...`;
+                        const months = Array.isArray(d.months)
+                            ? d.months.map(Number).filter(v => !isNaN(v))
+                            : String(d.months||'').split(',').map(s=>parseInt(s.trim())).filter(v=>!isNaN(v));
+                        await colRef().doc(existing.id).update({
+                            dates:  d.dates  || existing.dates  || '',
+                            months: months.length ? months : (existing.months || []),
+                            desc:   d.desc   || existing.desc   || '',
+                            method: d.method || existing.method || '',
+                            dateAdded: new Date().toISOString()
+                        });
+                        nUpdated++;
+                    } catch(e) {
+                        errors.push(`${d.name||'?'}: ${e.message}`);
+                    }
+                    continue; // QR保護のためスキップ
+                }
+            }
+
+            const rawQrImage = (d.qrImage || '').trim();
+            if (rawQrImage && rawQrImage.startsWith('data:image')) {
+                importBtn.textContent = `${idx+1}/${items.length}: QR画像をStorage登録中...`;
+                const storageUrl = await uploadQRToStorage(rawQrImage, d.name || 'qr');
+                if (storageUrl) {
+                    qrStorageUrl = storageUrl;
+                } else {
+                    importBtn.textContent = `${idx+1}/${items.length}: QR圧縮処理中...`;
+                    const compressed = await compressImage(rawQrImage, 180, 0.75);
+                    if (compressed) qrImageFallback = compressed;
+                }
+            }
+
+            const months = Array.isArray(d.months)
+                ? d.months.map(Number).filter(v => !isNaN(v))
+                : String(d.months || '').split(',').map(s=>parseInt(s.trim())).filter(v=>!isNaN(v));
+
+            try {
+                importBtn.textContent = `${idx+1}/${items.length}: Firestore登録中...`;
+                const res = await upsertCompany({
+                    name:   d.name   || '不明',
+                    cate:   d.cate   || 'その他',
+                    method: d.method || '',
+                    dates:  d.dates  || '',
+                    months,
+                    desc:   d.desc   || '',
+                    urlHp:  (d.urlHp || '').trim(),
+                    url:    resolvedUrl,
+                    qrData: resolvedQrData,
+                    qrStorageUrl,
+                    qrImage: qrImageFallback,
+                    hasQr:  d.hasQr === true || d.hasQr === 'true',
+                    endDate: '',
+                    active: true, curated: false,
+                    dateAdded: new Date().toISOString()
+                });
+                if (res === 'updated') { nUpdated++; } else { n++; }
+            } catch (e) {
+                console.error('Firestore書き込みエラー:', e);
+                errors.push(`${d.name||'?'}: ${e.message}`);
+            }
+        }
+    } catch(e) {
+        console.error('予期しないエラー:', e);
+        errors.push('予期しないエラー: ' + e.message);
+    } finally {
+        restoreBtn();
+        document.getElementById('ai-json-input').value = '';
+        const protectNote = protectMode ? '\n🛡 QR保護モードON：QR登録済み企業は日程・コメントのみ更新しました' : '';
+        if (errors.length > 0) {
+            alert(`新規登録 ${n}件、更新 ${nUpdated}件。\n\n⚠ エラー:\n` + errors.slice(0,3).join('\n') + protectNote);
+        } else {
+            alert(`新規登録 ${n}件、更新 ${nUpdated}件。${protectNote}`);
+        }
+    }
+});
+    // プロンプトコピー
+    document.getElementById('btn-copy-prompt').addEventListener('click',e=>{
+        const txt='このPDFを解析して、企業の説明会情報をJSON配列形式のみで出力してください。説明文は不要です。JSON配列だけ出力してください。\n\n項目:\nname（企業名）\ncate（業界：IT・ソフトウェア / 医療・福祉・介護 / 商社・小売・外食 / 金融・建設・その他 / その他）\nmethod（開催形式：オンライン・対面・WEB等）\ndates（日程テキスト　例：4/15, 22, 28）\nmonths（開催月の数字配列　例：[4,5]）\ndesc（先生目線での紹介文　100字以内）\nurlHp（企業名でGoogle検索して公式採用ページのURLを調べて入力してください。マイナビ・リクナビ等の就職サイトは除く。見つからなければ空文字 ""）\nurl（マイナビ・リクナビ・LINE等のエントリーURL。PDFに記載があれば入力。なければ空文字 ""）\nhasQr（QRコードが印刷されているか true/false）\nqrUrl（QRコードのURL。LINEの場合は https://line.me/R/ti/p/... の形式になります。読み取れない場合や存在しない場合は空文字 ""）';
+        navigator.clipboard?.writeText(txt).catch(()=>{const ta=document.createElement('textarea');ta.value=txt;document.body.appendChild(ta);ta.select();document.execCommand('copy');document.body.removeChild(ta);});
+        const sp=document.getElementById('btn-copy-text'); sp.textContent='コピーしました！';
+        e.currentTarget.classList.replace('bg-indigo-500','bg-emerald-500');
+        setTimeout(()=>{sp.textContent='指示文をコピー';e.currentTarget.classList.replace('bg-emerald-500','bg-indigo-500');},2000);
+    });
+
+    // ── QRコード画像アップロード処理 ──
+    const setupQrUpload = (inputId, previewId, dataId, clearBtnId) => {
+        const input   = document.getElementById(inputId);
+        const preview = document.getElementById(previewId);
+        const data    = document.getElementById(dataId);
+        const clearBtn= document.getElementById(clearBtnId);
+        if (!input) return;
+        input.addEventListener('change', e => {
+            const file = e.target.files[0];
+            if (!file) return;
+            // 1MB以上は警告
+            if (file.size > 1024 * 1024) {
+                alert('画像が大きすぎます（1MB以下推奨）。QRコード部分だけ切り取った画像を使ってください。');
+                return;
+            }
+            const reader = new FileReader();
+            reader.onload = ev => {
+                const base64 = ev.target.result;
+                data.value = base64;
+                preview.innerHTML = '<img src="'+base64+'" class="w-24 h-24 mx-auto object-contain rounded-xl">';
+                clearBtn.classList.remove('hidden');
+            };
+            reader.readAsDataURL(file);
+        });
+        clearBtn?.addEventListener('click', () => {
+            data.value = '__clear__';  // 削除フラグ（edit-saveで検知）
+            preview.textContent = '📷 QRコード画像を選択（PNG・JPG）';
+            clearBtn.classList.add('hidden');
+            input.value = '';
+        });
+    };
+    setupQrUpload('form-qr-input-hp', 'form-qr-preview-hp', 'form-qr-data-hp', 'form-qr-clear-hp');
+    setupQrUpload('form-qr-input', 'form-qr-preview', 'form-qr-data', 'form-qr-clear');
+    setupQrUpload('edit-qr-input-hp', 'edit-qr-preview-hp', 'edit-qr-data-hp', 'edit-qr-clear-hp');
+    setupQrUpload('edit-qr-input', 'edit-qr-preview', 'edit-qr-data', 'edit-qr-clear');
+
+    // ── カメラQRスキャン（撮影→jsQR解析方式） ──
+    (() => {
+        let targetUrlInput = null;
+
+        const modal     = document.getElementById('camera-modal');
+        const stepShoot = document.getElementById('camera-step-shoot');
+        const stepAnal  = document.getElementById('camera-step-analyzing');
+        const stepOk    = document.getElementById('camera-step-success');
+        const stepErr   = document.getElementById('camera-step-error');
+        const resultUrl = document.getElementById('camera-result-url');
+        const captureInput = document.getElementById('camera-capture-input');
+
+        // ステップ切替
+        function showStep(name) {
+            [stepShoot, stepAnal, stepOk, stepErr].forEach(el => el.classList.add('hidden'));
+            ({ shoot: stepShoot, analyzing: stepAnal, success: stepOk, error: stepErr }[name])
+                ?.classList.remove('hidden');
+        }
+
+        // モーダルを開く
+        function openCamera(urlInput) {
+            targetUrlInput = urlInput;
+            showStep('shoot');
+            captureInput.value = ''; // 同じファイルを再選択できるようリセット
+            modal.classList.remove('hidden');
+            lucide.createIcons();
+        }
+
+        // モーダルを閉じる
+        function closeCamera() {
+            modal.classList.add('hidden');
+            captureInput.value = '';
+        }
+
+        // 撮影した画像をjsQRで解析
+        captureInput.addEventListener('change', async e => {
+            const file = e.target.files[0];
+            if (!file) return;
+
+            showStep('analyzing');
+
+            try {
+                // 画像をCanvasに描画してjsQRに渡す
+                const bitmap = await createImageBitmap(file);
+                const canvas = document.createElement('canvas');
+                // 解析精度を上げるため長辺を1200pxに制限（大きすぎると遅い）
+                const MAX = 1200;
+                const scale = Math.min(1, MAX / Math.max(bitmap.width, bitmap.height));
+                canvas.width  = Math.round(bitmap.width  * scale);
+                canvas.height = Math.round(bitmap.height * scale);
+                const ctx = canvas.getContext('2d');
+                ctx.drawImage(bitmap, 0, 0, canvas.width, canvas.height);
+                const imgData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+
+                const code = jsQR(imgData.data, imgData.width, imgData.height, {
+                    inversionAttempts: 'attemptBoth'
+                });
+
+                if (code && code.data) {
+                    resultUrl.textContent = code.data;
+                    showStep('success');
+                } else {
+                    showStep('error');
+                }
+            } catch(err) {
+                console.error('QR解析エラー:', err);
+                showStep('error');
+            }
+        });
+
+        // 「このURLをURL欄に入力する」
+        document.getElementById('camera-use-url')?.addEventListener('click', () => {
+            const url = resultUrl.textContent.trim();
+            if (targetUrlInput && url) {
+                targetUrlInput.value = url;
+                // 入力欄を一瞬緑にして視覚フィードバック
+                targetUrlInput.classList.add('border-emerald-400', 'bg-emerald-50');
+                setTimeout(() => targetUrlInput.classList.remove('border-emerald-400', 'bg-emerald-50'), 2000);
+            }
+            closeCamera();
+        });
+
+        // 「撮り直す」ボタン（2種）
+        document.getElementById('camera-retry') ?.addEventListener('click', () => { captureInput.value=''; showStep('shoot'); });
+        document.getElementById('camera-retry2')?.addEventListener('click', () => { captureInput.value=''; showStep('shoot'); });
+
+        // 閉じる
+        document.getElementById('camera-close')?.addEventListener('click', closeCamera);
+        modal.addEventListener('click', e => { if (e.target === modal) closeCamera(); });
+
+        // 編集モーダルのカメラボタン
+        document.getElementById('edit-qr-camera-btn')?.addEventListener('click', () => {
+            openCamera(document.getElementById('edit-url'));
+        });
+
+        // 手動追加フォームのカメラボタン
+        document.getElementById('form-qr-camera-btn')?.addEventListener('click', () => {
+            openCamera(document.getElementById('form-url'));
+        });
+    })();
+
+    // ── QR補完パネル ──
+    // companiesが更新されるたびにセレクトを再構築（redrawAllから呼ばれる）
+    window._rebuildQrSelect = () => {
+        const sel = document.getElementById('qr-target-select');
+        if (!sel) return;
+        const noQr = companies.filter(c =>
+            !c.id.startsWith('local-') &&
+            !expired(c) &&
+            !(c.qrStorageUrl || c.qrData || c.qrImage || c.url)
+        ).sort((a, b) => a.name.localeCompare(b.name, 'ja'));
+        const allActive = companies.filter(c =>
+            !c.id.startsWith('local-') && !expired(c)
+        ).sort((a, b) => a.name.localeCompare(b.name, 'ja'));
+
+        sel.innerHTML = '<option value="">― 企業を選んでください ―</option>';
+
+        if (noQr.length) {
+            const grp1 = document.createElement('optgroup');
+            grp1.label = '⚠ QR未登録の企業（' + noQr.length + '件）';
+            noQr.forEach(c => {
+                const opt = document.createElement('option');
+                opt.value = c.id;
+                opt.textContent = c.name;
+                grp1.appendChild(opt);
+            });
+            sel.appendChild(grp1);
+        }
+
+        const grp2 = document.createElement('optgroup');
+        grp2.label = '全掲載中企業（' + allActive.length + '件）';
+        allActive.forEach(c => {
+            const opt = document.createElement('option');
+            opt.value = c.id;
+            opt.textContent = c.name + (c.qrStorageUrl || c.qrData || c.qrImage || c.url ? ' ✅' : '');
+            grp2.appendChild(opt);
+        });
+        sel.appendChild(grp2);
+    };
+
+    document.getElementById('btn-qr-save')?.addEventListener('click', async () => {
+        const id  = document.getElementById('qr-target-select')?.value || '';
+        const url = (document.getElementById('qr-url-input')?.value || '').trim();
+        if (!id)  { alert('企業を選択してください。'); return; }
+        if (!url) { alert('URLを入力してください。'); return; }
+        if (!url.startsWith('http')) { alert('URLはhttpsまたはhttpで始まる形式で貼り付けてください。'); return; }
+        if (id.startsWith('local-')) { alert('Firebase接続後に操作できます。'); return; }
+        try {
+            await colRef().doc(id).update({ url, qrData: url, dateAdded: new Date().toISOString() });
+            document.getElementById('qr-url-input').value = '';
+            document.getElementById('qr-target-select').value = '';
+            const msg = document.getElementById('qr-save-msg');
+            msg.classList.remove('hidden');
+            setTimeout(() => msg.classList.add('hidden'), 3000);
+        } catch(e) {
+            alert('保存失敗。Firebase接続を確認してください。');
+            console.error(e);
+        }
+    });
+
+    // ── 終了済み企業を一括削除 ──
+    document.getElementById('btn-bulk-delete-expired')?.addEventListener('click', async () => {
+        const targets = companies.filter(c => expired(c) && !c.id.startsWith('local-'));
+        if (!targets.length) { alert('削除対象の終了済み企業はありません。'); return; }
+        if (!confirm(`終了済みの企業 ${targets.length}件 を削除しますか？\n\n` + targets.map(c=>c.name).join('\n'))) return;
+        let ok = 0, ng = 0;
+        for (const c of targets) {
+            try { await colRef().doc(c.id).delete(); ok++; }
+            catch(e) { ng++; console.error(e); }
+        }
+        alert(`${ok}件を削除しました。` + (ng ? `\n失敗: ${ng}件` : ''));
+    });
+
+    startFirebase();
+});
+</script>
+</body>
+</html>
