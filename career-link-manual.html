@@ -1,0 +1,963 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Career Link 操作マニュアル</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700;900&family=Noto+Serif+JP:wght@400;700&display=swap');
+
+:root {
+    --indigo: #4f46e5;
+    --indigo-light: #eef2ff;
+    --indigo-mid: #818cf8;
+    --orange: #f97316;
+    --amber: #f59e0b;
+    --red: #ef4444;
+    --green: #10b981;
+    --slate-50: #f8fafc;
+    --slate-100: #f1f5f9;
+    --slate-200: #e2e8f0;
+    --slate-400: #94a3b8;
+    --slate-600: #475569;
+    --slate-800: #1e293b;
+    --slate-900: #0f172a;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+    font-family: 'Noto Sans JP', sans-serif;
+    background: var(--slate-50);
+    color: var(--slate-800);
+    line-height: 1.7;
+}
+
+/* ── ヘッダー ── */
+.hero {
+    background: linear-gradient(135deg, #1e1b4b 0%, #312e81 50%, #4338ca 100%);
+    color: white;
+    padding: 60px 40px 50px;
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+}
+.hero::before {
+    content: '';
+    position: absolute;
+    top: -50%;
+    left: -20%;
+    width: 60%;
+    height: 200%;
+    background: radial-gradient(ellipse, rgba(99,102,241,0.3) 0%, transparent 70%);
+    pointer-events: none;
+}
+.hero-badge {
+    display: inline-block;
+    background: rgba(255,255,255,0.15);
+    border: 1px solid rgba(255,255,255,0.3);
+    border-radius: 100px;
+    padding: 6px 20px;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    margin-bottom: 20px;
+}
+.hero h1 {
+    font-size: 38px;
+    font-weight: 900;
+    letter-spacing: -0.02em;
+    margin-bottom: 12px;
+}
+.hero h1 span { color: #a5b4fc; }
+.hero p {
+    font-size: 14px;
+    color: rgba(255,255,255,0.7);
+    font-weight: 500;
+}
+.hero-meta {
+    display: flex;
+    justify-content: center;
+    gap: 24px;
+    margin-top: 28px;
+    flex-wrap: wrap;
+}
+.hero-meta span {
+    font-size: 12px;
+    color: rgba(255,255,255,0.6);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+/* ── 目次 ── */
+.toc {
+    max-width: 860px;
+    margin: 40px auto 0;
+    padding: 0 24px;
+}
+.toc-box {
+    background: white;
+    border: 1px solid var(--slate-200);
+    border-radius: 20px;
+    padding: 28px 32px;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.05);
+}
+.toc-box h2 {
+    font-size: 13px;
+    font-weight: 900;
+    color: var(--indigo);
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    margin-bottom: 16px;
+}
+.toc-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 6px;
+}
+.toc-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 12px;
+    border-radius: 10px;
+    text-decoration: none;
+    color: var(--slate-600);
+    font-size: 13px;
+    font-weight: 500;
+    transition: background 0.15s;
+}
+.toc-item:hover { background: var(--indigo-light); color: var(--indigo); }
+.toc-num {
+    width: 22px;
+    height: 22px;
+    background: var(--indigo-light);
+    color: var(--indigo);
+    border-radius: 6px;
+    font-size: 11px;
+    font-weight: 900;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+/* ── 本文 ── */
+.content {
+    max-width: 860px;
+    margin: 0 auto;
+    padding: 40px 24px 80px;
+}
+
+/* ── セクション ── */
+.section {
+    margin-bottom: 48px;
+}
+.section-header {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    margin-bottom: 20px;
+    padding-bottom: 14px;
+    border-bottom: 2px solid var(--slate-200);
+}
+.section-num {
+    width: 36px;
+    height: 36px;
+    background: var(--indigo);
+    color: white;
+    border-radius: 10px;
+    font-size: 16px;
+    font-weight: 900;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+.section-title {
+    font-size: 20px;
+    font-weight: 900;
+    color: var(--slate-900);
+}
+.section-sub {
+    font-size: 12px;
+    color: var(--slate-400);
+    font-weight: 500;
+    margin-top: 2px;
+}
+
+/* ── カード ── */
+.card {
+    background: white;
+    border: 1px solid var(--slate-200);
+    border-radius: 16px;
+    padding: 24px;
+    margin-bottom: 16px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+}
+
+/* ── ステップ ── */
+.steps { display: flex; flex-direction: column; gap: 12px; }
+.step {
+    display: flex;
+    gap: 16px;
+    align-items: flex-start;
+    padding: 16px 20px;
+    background: white;
+    border: 1px solid var(--slate-200);
+    border-radius: 14px;
+}
+.step-num {
+    width: 28px;
+    height: 28px;
+    background: var(--indigo);
+    color: white;
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: 900;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    margin-top: 1px;
+}
+.step-body { flex: 1; }
+.step-title {
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--slate-800);
+    margin-bottom: 4px;
+}
+.step-desc {
+    font-size: 13px;
+    color: var(--slate-600);
+    line-height: 1.6;
+}
+
+/* ── 注意・警告ボックス ── */
+.alert {
+    border-radius: 14px;
+    padding: 18px 20px;
+    margin-bottom: 16px;
+    display: flex;
+    gap: 14px;
+    align-items: flex-start;
+}
+.alert-icon {
+    font-size: 20px;
+    flex-shrink: 0;
+    margin-top: 1px;
+}
+.alert-body { flex: 1; }
+.alert-title {
+    font-size: 13px;
+    font-weight: 900;
+    margin-bottom: 5px;
+}
+.alert-text {
+    font-size: 12.5px;
+    line-height: 1.65;
+    font-weight: 500;
+}
+.alert-warn {
+    background: #fff7ed;
+    border: 1.5px solid #fed7aa;
+}
+.alert-warn .alert-title { color: #c2410c; }
+.alert-warn .alert-text  { color: #7c2d12; }
+
+.alert-danger {
+    background: #fef2f2;
+    border: 1.5px solid #fecaca;
+}
+.alert-danger .alert-title { color: #991b1b; }
+.alert-danger .alert-text  { color: #7f1d1d; }
+
+.alert-info {
+    background: var(--indigo-light);
+    border: 1.5px solid #c7d2fe;
+}
+.alert-info .alert-title { color: #3730a3; }
+.alert-info .alert-text  { color: #3730a3; }
+
+.alert-success {
+    background: #f0fdf4;
+    border: 1.5px solid #bbf7d0;
+}
+.alert-success .alert-title { color: #14532d; }
+.alert-success .alert-text  { color: #14532d; }
+
+/* ── 色凡例 ── */
+.legend {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-top: 12px;
+}
+.legend-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 14px;
+    border-radius: 100px;
+    font-size: 12px;
+    font-weight: 700;
+    border: 1px solid rgba(0,0,0,0.08);
+}
+.dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    flex-shrink: 0;
+}
+
+/* ── テーブル ── */
+table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+    margin-top: 8px;
+}
+th {
+    background: var(--slate-100);
+    color: var(--slate-600);
+    font-weight: 700;
+    font-size: 11px;
+    letter-spacing: 0.05em;
+    padding: 10px 14px;
+    text-align: left;
+    border-bottom: 2px solid var(--slate-200);
+}
+td {
+    padding: 11px 14px;
+    border-bottom: 1px solid var(--slate-100);
+    color: var(--slate-700);
+    vertical-align: top;
+    line-height: 1.55;
+}
+tr:last-child td { border-bottom: none; }
+tr:hover td { background: var(--slate-50); }
+
+/* ── アナログ作業ハイライト ── */
+.analog-box {
+    background: linear-gradient(135deg, #fff7ed, #fef3c7);
+    border: 2px solid #f97316;
+    border-radius: 16px;
+    padding: 24px;
+    margin-bottom: 20px;
+    position: relative;
+    overflow: hidden;
+}
+.analog-box::before {
+    content: '📱';
+    position: absolute;
+    right: 20px;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 56px;
+    opacity: 0.12;
+}
+.analog-title {
+    font-size: 15px;
+    font-weight: 900;
+    color: #c2410c;
+    margin-bottom: 10px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+.analog-text {
+    font-size: 13px;
+    color: #7c2d12;
+    line-height: 1.7;
+    font-weight: 500;
+}
+
+/* ── フロー図 ── */
+.flow {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    margin: 16px 0;
+}
+.flow-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 16px;
+    border-radius: 10px;
+    font-size: 13px;
+    font-weight: 700;
+}
+.flow-item.pc   { background: var(--indigo-light); color: #3730a3; border: 1px solid #c7d2fe; }
+.flow-item.sp   { background: #fff7ed; color: #c2410c; border: 1px solid #fed7aa; }
+.flow-item.both { background: #f0fdf4; color: #14532d; border: 1px solid #bbf7d0; }
+.flow-arrow {
+    text-align: center;
+    color: var(--slate-400);
+    font-size: 18px;
+    line-height: 1;
+}
+.flow-tag {
+    font-size: 10px;
+    font-weight: 900;
+    padding: 2px 8px;
+    border-radius: 100px;
+    flex-shrink: 0;
+}
+.tag-pc { background: var(--indigo); color: white; }
+.tag-sp { background: var(--orange); color: white; }
+
+/* ── フッター ── */
+footer {
+    text-align: center;
+    padding: 32px;
+    color: var(--slate-400);
+    font-size: 11px;
+    border-top: 1px solid var(--slate-200);
+    font-weight: 500;
+}
+
+@media print {
+    .hero { padding: 40px 24px; }
+    .section { page-break-inside: avoid; }
+}
+</style>
+</head>
+<body>
+
+<!-- ヒーローヘッダー -->
+<div class="hero">
+    <div class="hero-badge">Operation Manual</div>
+    <h1>Career <span>Link</span> 操作マニュアル</h1>
+    <p>先生の厳選キャリア掲示板 ― 管理者・担当教員向け</p>
+    <div class="hero-meta">
+        <span>🌱 多摩大学 キャリア支援課</span>
+        <span>📅 2026年4月 版</span>
+        <span>👤 北山 四郎</span>
+    </div>
+</div>
+
+<!-- 目次 -->
+<div class="toc">
+    <div class="toc-box">
+        <h2>📋 目次</h2>
+        <div class="toc-grid">
+            <a class="toc-item" href="#s1"><div class="toc-num">1</div>このシステムの概要</a>
+            <a class="toc-item" href="#s2"><div class="toc-num">2</div>画面の基本構成</a>
+            <a class="toc-item" href="#s3"><div class="toc-num">3</div>管理者ログイン</a>
+            <a class="toc-item" href="#s4"><div class="toc-num">4</div>企業データの登録（AI方式）</a>
+            <a class="toc-item" href="#s5"><div class="toc-num">5</div>LINE QRコードの登録【重要】</a>
+            <a class="toc-item" href="#s6"><div class="toc-num">6</div>企業データの編集・管理</a>
+            <a class="toc-item" href="#s7"><div class="toc-num">7</div>学生画面の見方</a>
+            <a class="toc-item" href="#s8"><div class="toc-num">8</div>データ整理・メンテナンス</a>
+            <a class="toc-item" href="#s9"><div class="toc-num">9</div>よくあるトラブルと対処</a>
+            <a class="toc-item" href="#s10"><div class="toc-num">10</div>運用フロー早見表</a>
+        </div>
+    </div>
+</div>
+
+<!-- 本文 -->
+<div class="content">
+
+<!-- 1. 概要 -->
+<div class="section" id="s1">
+    <div class="section-header">
+        <div class="section-num">1</div>
+        <div>
+            <div class="section-title">このシステムの概要</div>
+            <div class="section-sub">Career Link とは何か</div>
+        </div>
+    </div>
+    <div class="card">
+        <p style="font-size:14px; line-height:1.8; color:var(--slate-600);">
+            <strong style="color:var(--slate-800);">Career Link（先生の厳選キャリア掲示板）</strong>は、担当教員が厳選した企業説明会・インターンシップ情報を学生にリアルタイムで届けるためのWebアプリです。Firebase（Googleのクラウドデータベース）と連携しており、管理画面で登録した情報が学生画面に即座に反映されます。
+        </p>
+    </div>
+    <div class="alert alert-info">
+        <div class="alert-icon">💡</div>
+        <div class="alert-body">
+            <div class="alert-title">動作環境について</div>
+            <div class="alert-text">インターネット接続が必要です。接続していない場合は「Firebase未接続」バッジが画面右下に表示され、固定データのみ表示されます（管理操作は保存されません）。</div>
+        </div>
+    </div>
+</div>
+
+<!-- 2. 画面構成 -->
+<div class="section" id="s2">
+    <div class="section-header">
+        <div class="section-num">2</div>
+        <div>
+            <div class="section-title">画面の基本構成</div>
+            <div class="section-sub">学生画面と管理画面の切り替え</div>
+        </div>
+    </div>
+    <div class="card">
+        <table>
+            <tr>
+                <th>画面</th>
+                <th>表示対象</th>
+                <th>主な機能</th>
+            </tr>
+            <tr>
+                <td><strong>学生画面</strong>（初期表示）</td>
+                <td>学生・来訪者</td>
+                <td>企業検索・絞り込み・QRコード表示・詳細リンク</td>
+            </tr>
+            <tr>
+                <td><strong>管理画面</strong>（要ログイン）</td>
+                <td>担当教員のみ</td>
+                <td>企業の登録・編集・削除・掲載終了・厳選設定</td>
+            </tr>
+        </table>
+    </div>
+    <div class="alert alert-info">
+        <div class="alert-icon">🔄</div>
+        <div class="alert-body">
+            <div class="alert-title">画面切替方法</div>
+            <div class="alert-text">ナビゲーションバー右上の「管理」ボタンでログインすると管理画面へ切り替わります。「学生用画面」ボタン、またはログアウトで学生画面に戻ります。</div>
+        </div>
+    </div>
+</div>
+
+<!-- 3. ログイン -->
+<div class="section" id="s3">
+    <div class="section-header">
+        <div class="section-num">3</div>
+        <div>
+            <div class="section-title">管理者ログイン</div>
+            <div class="section-sub">パスワード認証</div>
+        </div>
+    </div>
+    <div class="steps">
+        <div class="step">
+            <div class="step-num">1</div>
+            <div class="step-body">
+                <div class="step-title">「管理」ボタンをクリック</div>
+                <div class="step-desc">ナビゲーションバー右上の鍵マークのボタンをクリックします。</div>
+            </div>
+        </div>
+        <div class="step">
+            <div class="step-num">2</div>
+            <div class="step-body">
+                <div class="step-title">パスワードを入力して「認証」</div>
+                <div class="step-desc">管理パスワードを入力してEnterキーまたは「認証」ボタンを押します。</div>
+            </div>
+        </div>
+        <div class="step">
+            <div class="step-num">3</div>
+            <div class="step-body">
+                <div class="step-title">管理画面が表示される</div>
+                <div class="step-desc">認証成功後、AI連携パネル・手動追加フォーム・企業管理リストが表示されます。</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 4. 企業データ登録 -->
+<div class="section" id="s4">
+    <div class="section-header">
+        <div class="section-num">4</div>
+        <div>
+            <div class="section-title">企業データの登録（AI方式）</div>
+            <div class="section-sub">ポスターPDFからAIで自動抽出して登録する</div>
+        </div>
+    </div>
+    <div class="steps">
+        <div class="step">
+            <div class="step-num">1</div>
+            <div class="step-body">
+                <div class="step-title">ポスターをスキャンしてPDF化</div>
+                <div class="step-desc">紙のポスターをスキャナーでPDF化します。複合機・スマホスキャンアプリ等を使用してください。</div>
+            </div>
+        </div>
+        <div class="step">
+            <div class="step-num">2</div>
+            <div class="step-body">
+                <div class="step-title">「指示文をコピーする」ボタンを押す</div>
+                <div class="step-desc">管理画面のSTEP①エリアにある「📋 指示文をコピーする」ボタンをクリックします。AIへの指示文がクリップボードにコピーされます。</div>
+            </div>
+        </div>
+        <div class="step">
+            <div class="step-num">3</div>
+            <div class="step-body">
+                <div class="step-title">Claude.ai または Gemini にPDFと指示文を貼り付けて送信</div>
+                <div class="step-desc">AIチャット画面でPDFをアップロードし、コピーした指示文を貼り付けて送信します。AIが企業情報をJSON形式で出力します。</div>
+            </div>
+        </div>
+        <div class="step">
+            <div class="step-num">4</div>
+            <div class="step-body">
+                <div class="step-title">出力された [ から始まるJSONをコピー</div>
+                <div class="step-desc">AIが出力したJSONデータ（[ で始まり ] で終わる部分）を全てコピーします。</div>
+            </div>
+        </div>
+        <div class="step">
+            <div class="step-num">5</div>
+            <div class="step-body">
+                <div class="step-title">STEP②の入力欄に貼り付けて「登録する」</div>
+                <div class="step-desc">管理画面のSTEP②入力欄にJSONを貼り付け、「貼り付けたデータを登録する」ボタンを押します。学生画面に即時反映されます。</div>
+            </div>
+        </div>
+    </div>
+    <div class="alert alert-info" style="margin-top:16px;">
+        <div class="alert-icon">📝</div>
+        <div class="alert-body">
+            <div class="alert-title">手動追加も可能</div>
+            <div class="alert-text">管理画面下部の「企業を手動で追加」フォームから、1件ずつ直接入力することもできます。</div>
+        </div>
+    </div>
+</div>
+
+<!-- 5. LINE QR（重要） -->
+<div class="section" id="s5">
+    <div class="section-header">
+        <div class="section-num">5</div>
+        <div>
+            <div class="section-title">LINE QRコードの登録</div>
+            <div class="section-sub" style="color:#c2410c; font-weight:700;">⚠ アナログ作業が必要です ― 必ずお読みください</div>
+        </div>
+    </div>
+
+    <div class="analog-box">
+        <div class="analog-title">
+            📱 スマートフォンでの作業が必ず必要です
+        </div>
+        <div class="analog-text">
+            近年、企業説明会のポスターには「LINE友達追加」QRコードが多く使われています。<br>
+            このQRコードのURLは、<strong>PCでは自動的に読み取れません。</strong><br>
+            必ずスマートフォンで実際にQRを読み取り、表示されたURLをメールで自分に送ってから、PCで登録する「アナログ作業」が必要となります。<br><br>
+            <strong>この手順を省略すると、学生画面にQRコードが正しく表示されません。</strong>
+        </div>
+    </div>
+
+    <div class="card">
+        <div style="font-size:13px; font-weight:700; color:var(--slate-800); margin-bottom:14px;">LINE QR登録の手順（フロー）</div>
+        <div class="flow">
+            <div class="flow-item pc">
+                <span class="flow-tag tag-pc">PC</span>
+                ① AIでポスターを解析・JSON登録（通常の企業データ登録）
+            </div>
+            <div class="flow-arrow">↓</div>
+            <div class="flow-item sp">
+                <span class="flow-tag tag-sp">スマホ</span>
+                ② ポスターのLINE QRコードにスマホのカメラをかざして読み取る
+            </div>
+            <div class="flow-arrow">↓</div>
+            <div class="flow-item sp">
+                <span class="flow-tag tag-sp">スマホ</span>
+                ③ 表示されたURLを長押しコピー → 自分のメールアドレスに送信
+            </div>
+            <div class="flow-arrow">↓</div>
+            <div class="flow-item pc">
+                <span class="flow-tag tag-pc">PC</span>
+                ④ メールを開いてURLをコピー
+            </div>
+            <div class="flow-arrow">↓</div>
+            <div class="flow-item pc">
+                <span class="flow-tag tag-pc">PC</span>
+                ⑤ 管理画面で該当企業の「編集」ボタンを押す
+            </div>
+            <div class="flow-arrow">↓</div>
+            <div class="flow-item both">
+                <span class="flow-tag" style="background:var(--green);color:white;">完了</span>
+                ⑥ URL欄にLINEのURLを貼り付けて「保存する」→ QRコードが学生画面に表示される ✅
+            </div>
+        </div>
+    </div>
+
+    <div class="alert alert-danger">
+        <div class="alert-icon">🚫</div>
+        <div class="alert-body">
+            <div class="alert-title">AIが自動取得するURLでは使えない場合があります</div>
+            <div class="alert-text">
+                AIが解析したJSONに <code style="background:#fecaca; padding:1px 5px; border-radius:4px;">qrUrl: "https://line.me/R/ti/p/@..."</code> と出力されることがありますが、このURLは実際には動作しない場合があります。<br>
+                必ずスマートフォンで実際に読み取ったURLを使用してください。<br>
+                正しいURLは <code style="background:#fecaca; padding:1px 5px; border-radius:4px;">https://liff.line.me/...</code> 等の形式になることが多いです。
+            </div>
+        </div>
+    </div>
+
+    <div class="alert alert-warn">
+        <div class="alert-icon">⚠️</div>
+        <div class="alert-body">
+            <div class="alert-title">登録後のQRコード確認を忘れずに</div>
+            <div class="alert-text">URL登録後、学生画面で実際にQRコードが表示されているか、スマホで読み取って正しいページが開くかを必ず確認してください。</div>
+        </div>
+    </div>
+</div>
+
+<!-- 6. 編集・管理 -->
+<div class="section" id="s6">
+    <div class="section-header">
+        <div class="section-num">6</div>
+        <div>
+            <div class="section-title">企業データの編集・管理</div>
+            <div class="section-sub">登録済み企業の操作方法</div>
+        </div>
+    </div>
+    <div class="card">
+        <table>
+            <tr>
+                <th>ボタン</th>
+                <th>機能</th>
+                <th>備考</th>
+            </tr>
+            <tr>
+                <td><strong>編集</strong></td>
+                <td>企業情報の修正・URL追加</td>
+                <td>LINE QRのURL追加もここで行う</td>
+            </tr>
+            <tr>
+                <td><strong>掲載終了</strong></td>
+                <td>学生画面から非表示にする</td>
+                <td>データは残るので再開も可能</td>
+            </tr>
+            <tr>
+                <td><strong>掲載再開</strong></td>
+                <td>非表示を解除して再表示</td>
+                <td>終了済み企業に表示</td>
+            </tr>
+            <tr>
+                <td><strong>厳選に追加 ⭐</strong></td>
+                <td>学生画面上部の「Teacher's Insight」に掲載</td>
+                <td>特にオススメの企業に使用</td>
+            </tr>
+            <tr>
+                <td><strong>削除</strong></td>
+                <td>データを完全に削除</td>
+                <td>削除後は復元不可</td>
+            </tr>
+            <tr>
+                <td><strong>終了済みを一括削除</strong></td>
+                <td>掲載終了日が過ぎた企業を一括削除</td>
+                <td>定期的に実施してデータ整理</td>
+            </tr>
+        </table>
+    </div>
+    <div class="alert alert-info">
+        <div class="alert-icon">📅</div>
+        <div class="alert-body">
+            <div class="alert-title">掲載終了日の設定について</div>
+            <div class="alert-text">編集画面で「掲載終了日」を設定すると、その日を過ぎると学生画面から自動的に非表示になります。説明会の最終日を設定しておくと管理が楽になります。</div>
+        </div>
+    </div>
+</div>
+
+<!-- 7. 学生画面 -->
+<div class="section" id="s7">
+    <div class="section-header">
+        <div class="section-num">7</div>
+        <div>
+            <div class="section-title">学生画面の見方</div>
+            <div class="section-sub">色分け・表示の意味</div>
+        </div>
+    </div>
+    <div class="card">
+        <div style="font-size:13px; font-weight:700; color:var(--slate-700); margin-bottom:12px;">「詳細・申込」ボタンと日付カードの色の意味</div>
+        <div class="legend">
+            <div class="legend-item" style="background:#fef2f2; border-color:#fecaca;">
+                <div class="dot" style="background:#ef4444;"></div>
+                <span style="color:#991b1b;">今日開催！</span>
+            </div>
+            <div class="legend-item" style="background:#fff7ed; border-color:#fed7aa;">
+                <div class="dot" style="background:#f97316;"></div>
+                <span style="color:#c2410c;">3日以内</span>
+            </div>
+            <div class="legend-item" style="background:#fffbeb; border-color:#fde68a;">
+                <div class="dot" style="background:#f59e0b;"></div>
+                <span style="color:#92400e;">7日以内</span>
+            </div>
+            <div class="legend-item" style="background:#eef2ff; border-color:#c7d2fe;">
+                <div class="dot" style="background:#4f46e5;"></div>
+                <span style="color:#3730a3;">14日以内</span>
+            </div>
+            <div class="legend-item" style="background:var(--slate-100); border-color:var(--slate-200);">
+                <div class="dot" style="background:var(--slate-300);"></div>
+                <span style="color:var(--slate-500);">それ以降・日程未定</span>
+            </div>
+        </div>
+    </div>
+    <div class="card" style="margin-top:0;">
+        <table>
+            <tr>
+                <th>表示要素</th>
+                <th>内容</th>
+            </tr>
+            <tr>
+                <td><strong>今週の説明会バナー</strong></td>
+                <td>直近7日以内に開催予定の企業を上部に自動表示</td>
+            </tr>
+            <tr>
+                <td><strong>⭐ Teacher's Insight</strong></td>
+                <td>教員が「厳選」に設定した企業を大きく表示</td>
+            </tr>
+            <tr>
+                <td><strong>業界フィルター</strong></td>
+                <td>IT・医療・商社・金融 等で絞り込み</td>
+            </tr>
+            <tr>
+                <td><strong>月フィルター</strong></td>
+                <td>開催月で絞り込み（過去月は自動で非表示）</td>
+            </tr>
+            <tr>
+                <td><strong>QRコード表示</strong></td>
+                <td>URLが登録されている企業は自動でQRを生成・表示</td>
+            </tr>
+        </table>
+    </div>
+    <div class="card" style="margin-top:0; font-size:13px; color:var(--slate-600);">
+        <strong style="color:var(--slate-800);">QRコードの説明文について：</strong><br>
+        LINEや申込フォームのURLが登録されている場合 →「📱 QRコードで申込・友達追加」<br>
+        企業ホームページのURLの場合 →「📱 QRコードでサイトを開く（申込ページが開く場合もあります）」
+    </div>
+</div>
+
+<!-- 8. メンテナンス -->
+<div class="section" id="s8">
+    <div class="section-header">
+        <div class="section-num">8</div>
+        <div>
+            <div class="section-title">データ整理・メンテナンス</div>
+            <div class="section-sub">定期的な運用作業</div>
+        </div>
+    </div>
+    <div class="card">
+        <table>
+            <tr>
+                <th>作業</th>
+                <th>タイミング</th>
+                <th>方法</th>
+            </tr>
+            <tr>
+                <td><strong>終了済み企業の削除</strong></td>
+                <td>月1回程度</td>
+                <td>管理リスト上部の「終了済みを一括削除」ボタン</td>
+            </tr>
+            <tr>
+                <td><strong>掲載終了日の設定</strong></td>
+                <td>企業登録時</td>
+                <td>編集画面の「掲載終了日」欄に説明会最終日を入力</td>
+            </tr>
+            <tr>
+                <td><strong>Firestoreテストモード期限</strong></td>
+                <td>2026年4月28日まで</td>
+                <td>Firebaseコンソールでルールを本番用に更新</td>
+            </tr>
+        </table>
+    </div>
+    <div class="alert alert-danger">
+        <div class="alert-icon">🔥</div>
+        <div class="alert-body">
+            <div class="alert-title">Firestoreテストモードの期限切れに注意！</div>
+            <div class="alert-text">
+                2026年4月28日以降、Firestoreのテストモードが期限切れになるとデータの読み書きができなくなります。Firebaseコンソールでセキュリティルールを更新してください。
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 9. トラブル -->
+<div class="section" id="s9">
+    <div class="section-header">
+        <div class="section-num">9</div>
+        <div>
+            <div class="section-title">よくあるトラブルと対処</div>
+            <div class="section-sub">困ったときの確認事項</div>
+        </div>
+    </div>
+    <div class="card">
+        <table>
+            <tr>
+                <th>症状</th>
+                <th>原因</th>
+                <th>対処</th>
+            </tr>
+            <tr>
+                <td>企業データが表示されない</td>
+                <td>Firebase未接続</td>
+                <td>インターネット接続を確認。数秒待つと自動で反映。</td>
+            </tr>
+            <tr>
+                <td>右下にオレンジのバッジが出る</td>
+                <td>Firebase未接続状態</td>
+                <td>接続が戻ると自動で消える。固定データのみ表示中。</td>
+            </tr>
+            <tr>
+                <td>QRコードが表示されない</td>
+                <td>URL未登録</td>
+                <td>編集画面でURL欄にURLを入力して保存。</td>
+            </tr>
+            <tr>
+                <td>QRを読んでも正しいページが開かない</td>
+                <td>AIが取得したURLが不正確</td>
+                <td>スマホで実際にQRを読み取り、正しいURLを再登録。</td>
+            </tr>
+            <tr>
+                <td>管理操作が保存されない</td>
+                <td>Firebase未接続 or 期限切れ</td>
+                <td>接続を確認。Firestoreルールの期限も確認。</td>
+            </tr>
+            <tr>
+                <td>ファイルを開いても何も動かない</td>
+                <td>インターネット未接続</td>
+                <td>Firebase CDNの読込にインターネットが必要。接続して再度開く。</td>
+            </tr>
+        </table>
+    </div>
+</div>
+
+<!-- 10. 早見表 -->
+<div class="section" id="s10">
+    <div class="section-header">
+        <div class="section-num">10</div>
+        <div>
+            <div class="section-title">運用フロー早見表</div>
+            <div class="section-sub">日常作業の流れ</div>
+        </div>
+    </div>
+    <div class="card">
+        <div style="font-size:13px; font-weight:700; color:var(--slate-700); margin-bottom:14px;">🌱 通常の企業登録（LINE QRなし）</div>
+        <div class="flow">
+            <div class="flow-item pc"><span class="flow-tag tag-pc">PC</span>ポスターをPDF化 → AIに読み込ませてJSON取得 → 貼り付けて登録</div>
+        </div>
+    </div>
+    <div class="card">
+        <div style="font-size:13px; font-weight:700; color:#c2410c; margin-bottom:14px;">📱 LINE QRコードがある企業の登録</div>
+        <div class="flow">
+            <div class="flow-item pc"><span class="flow-tag tag-pc">PC</span>① AIでポスターを解析・JSON登録</div>
+            <div class="flow-arrow">↓</div>
+            <div class="flow-item sp"><span class="flow-tag tag-sp">スマホ</span>② ポスターのLINE QRをスマホで読み取る</div>
+            <div class="flow-arrow">↓</div>
+            <div class="flow-item sp"><span class="flow-tag tag-sp">スマホ</span>③ 表示されたURLを自分のメールに送る</div>
+            <div class="flow-arrow">↓</div>
+            <div class="flow-item pc"><span class="flow-tag tag-pc">PC</span>④ メールからURLをコピー → 編集画面のURL欄に貼り付けて保存</div>
+        </div>
+    </div>
+    <div class="card">
+        <div style="font-size:13px; font-weight:700; color:var(--slate-700); margin-bottom:14px;">🗂 月次メンテナンス</div>
+        <div class="flow">
+            <div class="flow-item pc"><span class="flow-tag tag-pc">PC</span>管理リスト →「終了済みを一括削除」→ 必要に応じて新規企業を追加</div>
+        </div>
+    </div>
+
+    <div class="alert alert-success" style="margin-top:16px;">
+        <div class="alert-icon">🌱</div>
+        <div class="alert-body">
+            <div class="alert-title">担当：北山 四郎 / 多摩大学 キャリア支援課</div>
+            <div class="alert-text">「仕事を通して必要とされる生き方を、自分の手で作り上げていくこと」——就職の本質。あなたの就活を、木を育てるように丁寧にサポートします。</div>
+        </div>
+    </div>
+</div>
+
+</div><!-- /content -->
+
+<footer>
+    Career Link 操作マニュアル ／ 多摩大学 キャリア支援課 ／ 2026年4月版<br>
+    担当：北山 四郎　kitayama@tama.ac.jp
+</footer>
+
+</body>
+</html>
