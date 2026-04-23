@@ -40,7 +40,11 @@
         .date-future { color:#1e40af; font-weight:700; }
         @keyframes spin { to { transform: rotate(360deg); } }
         .animate-spin { animation: spin 1s linear infinite; }
-        /* ④ NEWバッジ */
+        /* ④ お気に入りボタン */
+        .fav-btn { background:none; border:none; cursor:pointer; font-size:18px; line-height:1; transition:transform .15s; padding:2px; }
+        .fav-btn:hover { transform:scale(1.2); }
+        .fav-btn.active { animation: fav-pop .25s ease; }
+        @keyframes fav-pop { 0%{transform:scale(1)} 50%{transform:scale(1.4)} 100%{transform:scale(1)} }
         .badge-new {
             background: linear-gradient(135deg, #f97316, #ef4444);
             color: #fff; font-weight: 900; font-size: 10px;
@@ -326,6 +330,10 @@
             <div class="flex items-center justify-between text-xs font-bold text-slate-400 px-2 border-t pt-4 border-slate-100">
                 <div id="results-count">表示中: -- 件</div>
                 <div class="flex items-center gap-3">
+                    <button id="btn-fav-filter" class="flex items-center gap-1 text-slate-400 hover:text-pink-500 transition-colors font-bold">
+                        ♡ お気に入りのみ
+                    </button>
+                    <span class="text-slate-300">|</span>
                     <button id="sort-date" class="text-indigo-600 flex items-center gap-1 hover:text-indigo-800 transition-colors">
                         <i data-lucide="calendar" class="w-3 h-3"></i>
                         <span id="sort-date-label">開催日が近い順</span>
@@ -467,6 +475,16 @@
                     </button>
                     <p class="text-indigo-500 text-[11px] text-center">登録後、学生画面に即時反映されます</p>
                     <div id="import-status" class="hidden bg-emerald-500/10 border border-emerald-400/20 rounded-2xl p-3 text-xs text-emerald-300 font-bold text-center"></div>
+
+                    <!-- ⑥ 登録プレビューパネル -->
+                    <div id="import-preview" class="hidden space-y-2">
+                        <p class="text-indigo-300 text-xs font-black uppercase tracking-widest">📋 登録前プレビュー（既存企業は🔄、新規は🆕）</p>
+                        <div id="import-preview-list" class="space-y-1 max-h-48 overflow-y-auto"></div>
+                        <div class="flex gap-3 pt-2">
+                            <button id="btn-import-cancel" class="flex-1 py-3 text-indigo-300 font-bold hover:bg-white/10 rounded-2xl text-sm transition-all">キャンセル</button>
+                            <button id="btn-import-confirm" class="flex-1 py-3 bg-emerald-500 hover:bg-emerald-400 text-white font-black rounded-2xl text-sm transition-all">✅ この内容で登録する</button>
+                        </div>
+                    </div>
                     <div class="bg-sky-500/10 border border-sky-400/30 rounded-2xl p-3 text-[11px] text-sky-300 leading-relaxed">
                         📱 <strong>LINE QRコードのURLについて：</strong><br>
                         スマホでポスターのQRを読む → メールで自分に送る → 管理画面の「編集」ボタン → URL欄に貼り付けて保存
@@ -582,6 +600,25 @@
         </div>
     </div>
 
+    <!-- ⑤ 週次レポートパネル -->
+    <div class="bg-white rounded-[40px] border border-indigo-100 shadow-sm overflow-hidden">
+        <div class="px-8 py-5 bg-indigo-50 border-b border-indigo-100 flex items-center justify-between flex-wrap gap-3">
+            <div class="flex items-center gap-3">
+                <div class="bg-indigo-100 p-2 rounded-xl">
+                    <i data-lucide="bar-chart-2" class="w-5 h-5 text-indigo-600"></i>
+                </div>
+                <div>
+                    <p class="font-black text-indigo-800 text-sm">📊 週次レポート</p>
+                    <p class="text-[11px] text-indigo-500 mt-0.5">今週の登録・更新・終了状況のまとめ</p>
+                </div>
+            </div>
+            <button id="btn-copy-report" class="flex items-center gap-1.5 text-xs font-black px-4 py-2 bg-indigo-600 text-white rounded-2xl hover:bg-indigo-700 transition-all">
+                <i data-lucide="copy" class="w-3.5 h-3.5"></i> レポートをコピー
+            </button>
+        </div>
+        <div id="weekly-report" class="p-6 md:p-8 grid grid-cols-2 md:grid-cols-4 gap-4"></div>
+    </div>
+
     <!-- 企業管理リスト -->
     <div class="bg-white rounded-[40px] border border-slate-200 shadow-sm overflow-hidden">
         <div class="px-8 py-5 bg-slate-50 border-b border-slate-100 flex justify-between items-center flex-wrap gap-3">
@@ -675,8 +712,19 @@ async function upsertCompany(data) {
         return 'added';
     }
     const snap = await colRef().where('name', '==', name).limit(1).get();
+    // ② 完全一致で見つからない場合はあいまい検索（正規化比較）
+    let targetDoc = null;
     if (!snap.empty) {
-        const existing = snap.docs[0].data();
+        targetDoc = snap.docs[0];
+    } else {
+        const allSnap = await colRef().get();
+        const normNew = normalizeCompanyName(name);
+        allSnap.forEach(doc => {
+            if (normalizeCompanyName(doc.data().name) === normNew) targetDoc = doc;
+        });
+    }
+    if (targetDoc) {
+        const existing = targetDoc.data();
 
         // ── 【保護フィールド】既存データを優先 ──
         const protectedFields = {
@@ -706,7 +754,7 @@ async function upsertCompany(data) {
             dateAdded:    new Date().toISOString(),
         };
 
-        await snap.docs[0].ref.update({ ...protectedFields, ...updateFields });
+        await targetDoc.ref.update({ ...protectedFields, ...updateFields });
         return 'updated';
     } else {
         // ④ 新規登録時はisNew=trueを付与
@@ -720,6 +768,38 @@ async function upsertCompany(data) {
         });
         return 'added';
     }
+}
+
+// ══════════════════════════════════════════════════════════
+// ④ お気に入り機能（localStorage、Firebaseアカウント不要）
+// ══════════════════════════════════════════════════════════
+const FAV_KEY = 'career-link-favs-v1';
+function getFavs() { try { return JSON.parse(localStorage.getItem(FAV_KEY)||'[]'); } catch{ return []; } }
+function isFav(id) { return getFavs().includes(id); }
+function toggleFav(id) {
+    let favs = getFavs();
+    if (favs.includes(id)) favs = favs.filter(f => f !== id);
+    else favs.push(id);
+    localStorage.setItem(FAV_KEY, JSON.stringify(favs));
+    redrawAll();
+}
+// フィルター用：お気に入りのみ表示
+let showFavOnly = false;
+
+// ══════════════════════════════════════════════════════════
+// ② 企業名あいまい正規化（表記揺れ対策）
+// 「株式会社〇〇」「〇〇株式会社」「〇〇(株)」を同一視
+// ══════════════════════════════════════════════════════════
+function normalizeCompanyName(name) {
+    return (name || '')
+        .trim()
+        .replace(/\s+/g, '')                        // 空白除去
+        .replace(/（株）|[(（]株[)）]/g, '')         // （株）除去
+        .replace(/（有）|[(（]有[)）]/g, '')         // （有）除去
+        .replace(/株式会社|有限会社|合同会社/g, '')  // 法人格除去
+        .replace(/[Ａ-Ｚａ-ｚ０-９]/g, s => String.fromCharCode(s.charCodeAt(0) - 0xFEE0)) // 全角→半角
+        .replace(/[ぁ-ん]/g, s => String.fromCharCode(s.charCodeAt(0) + 0x60))             // ひらがな→カタカナ
+        .toLowerCase();
 }
 
 // ── base64画像圧縮 ──
@@ -909,7 +989,7 @@ function generateQRCodes() {
 
 function redrawAll() {
     updateMonthFilter(); drawThisWeekBanner(); drawCurated(); drawBulk();
-    if (isAdmin) { drawAdmin(); }
+    if (isAdmin) { drawAdmin(); drawWeeklyReport(); }
     if (typeof window._rebuildQrSelect === 'function') window._rebuildQrSelect();
     lucide.createIcons();
 }
@@ -1019,6 +1099,7 @@ function drawBulk() {
     const me = document.getElementById('methodFilter')?.value||'all';
     let list = companies.filter(d => {
         if (expired(d)) return false;
+        if (showFavOnly && !isFav(d.id)) return false;
         const sk = d.name?.toLowerCase().includes(kw)||d.desc?.toLowerCase().includes(kw);
         const sc = ca==='all'||d.cate===ca;
         const curM = new Date().getMonth() + 1;
@@ -1028,17 +1109,24 @@ function drawBulk() {
     });
     const today2 = new Date(); today2.setHours(0,0,0,0);
     const getNext = d => { const f = parseAllDates(d.dates).filter(dt=>dt>=today2).sort((a,b)=>a-b); return f[0] || new Date(9999,0,1); };
-    if (sortMode==='date-asc') list.sort((a,b)=>getNext(a)-getNext(b));
-    else if (sortMode==='date-desc') list.sort((a,b)=>getNext(b)-getNext(a));
+    const getDays = d => { const n = getNext(d); if(n.getFullYear()===9999) return 9999; return Math.round((n-today2)/(1000*60*60*24)); };
+
+    // ③ 3日以内の企業を常に先頭にピン留め、その中でも近い順
+    const pinned   = list.filter(d => getDays(d) <= 3).sort((a,b) => getDays(a)-getDays(b));
+    const unpinned = list.filter(d => getDays(d) >  3);
+    if (sortMode==='date-asc')  unpinned.sort((a,b)=>getNext(a)-getNext(b));
+    else if (sortMode==='date-desc') unpinned.sort((a,b)=>getNext(b)-getNext(a));
     else {
         const co={'IT・ソフトウェア':1,'医療・福祉・介護':2,'商社・小売・外食':3,'金融・建設・その他':4,'その他':5};
-        list.sort((a,b)=>{ const ca=co[a.cate]||9,cb=co[b.cate]||9; return ca!==cb?ca-cb:getNext(a)-getNext(b); });
+        unpinned.sort((a,b)=>{ const ca=co[a.cate]||9,cb=co[b.cate]||9; return ca!==cb?ca-cb:getNext(a)-getNext(b); });
     }
-    document.getElementById('results-count').textContent = '表示中: '+list.length+' 件';
-    if (!list.length){box.innerHTML='';noRes?.classList.remove('hidden');return;}
+    // ピン留め + 通常リストを結合
+    const sortedList = [...pinned, ...unpinned];
+    document.getElementById('results-count').textContent = '表示中: '+sortedList.length+' 件'+(pinned.length>0?' 📌 '+pinned.length+'件ピン留め中':'');
+    if (!sortedList.length){box.innerHTML='';noRes?.classList.remove('hidden');return;}
     noRes?.classList.add('hidden');
     const WDAY=['日','月','火','水','木','金','土'];
-    box.innerHTML = list.map(d=>{
+    box.innerHTML = sortedList.map(d=>{
         const days = getDaysUntilNext(d.dates);
         const coloredDates = formatDatesColored(d.dates);
         const badge = daysBadge(days);
@@ -1067,12 +1155,14 @@ function drawBulk() {
             ? '<div class="bg-emerald-50 rounded-2xl p-3 border border-emerald-100 text-center"><p class="text-[10px] text-emerald-700 font-black mb-2">🟢 申し込む（QRをスマホで読み取ってください）</p><img src="'+entrySrc+'" class="w-28 h-28 mx-auto rounded-xl object-contain border border-emerald-200" alt="エントリーQR">'+(d.url?'<a href="'+d.url+'" target="_blank" class="mt-2 w-full '+(hasUpcoming&&days===0?'bg-red-500':hasUpcoming&&days<=3?'bg-orange-500':hasUpcoming&&days<=7?'bg-amber-500':'bg-emerald-500')+' text-white font-bold py-2.5 rounded-xl flex items-center justify-center gap-1.5 hover:opacity-90 transition-all text-xs">🟢 申し込む <i data-lucide="external-link" class="w-3.5 h-3.5"></i></a>':'')+'</div>'
             : entryUrl ? '<div class="bg-emerald-50 rounded-2xl p-3 border border-emerald-100 text-center"><p class="text-[10px] text-emerald-700 font-black mb-2">🟢 申し込む（QRをスマホで読み取ってください）</p><div data-qr-url="'+entryUrl+'" class="flex justify-center mb-2"></div><a href="'+entryUrl+'" target="_blank" class="mt-1 w-full '+(hasUpcoming&&days===0?'bg-red-500':hasUpcoming&&days<=3?'bg-orange-500':hasUpcoming&&days<=7?'bg-amber-500':'bg-emerald-500')+' text-white font-bold py-2.5 rounded-xl flex items-center justify-center gap-1.5 hover:opacity-90 transition-all text-xs">🟢 申し込む <i data-lucide="external-link" class="w-3.5 h-3.5"></i></a></div>'
             : (!(d.urlHp) ? '<div class="w-full bg-slate-100 text-slate-400 font-bold py-3 rounded-xl text-center text-xs">お問い合わせ先は担当キャリアカウンセラーへ</div>' : '');
-        return '<div class="bg-white p-6 rounded-[32px] border '+cardBorder+' shadow-sm hover:shadow-lg transition-all flex flex-col">' +
+        return '<div class="bg-white p-6 rounded-[32px] border '+cardBorder+' shadow-sm hover:shadow-lg transition-all flex flex-col'+(days!==null&&days<=3?' ring-2 ring-red-400 ring-offset-1':'')+'">' +
+            (days!==null&&days<=3?'<div class="bg-red-500 text-white text-[10px] font-black px-4 py-1.5 -mx-6 -mt-6 mb-4 rounded-t-[28px] text-center tracking-widest">📌 締切間近！ピン留め中</div>':'') +
             '<div class="flex justify-between items-start mb-3">' +
             '<span class="px-3 py-1 rounded-full text-[10px] font-black '+(CC[d.cate]||'cate-other')+'">'+(d.cate||'その他')+'</span>' +
             '<div class="flex items-center gap-1.5">' +
             (d.isNew ? '<span class="badge-new">🆕 NEW</span>' : '') +
             (d.curated ? '<span class="text-[10px] bg-amber-100 text-amber-700 px-2 py-1 rounded-full font-black">⭐ 厳選</span>' : '') +
+            '<button class="fav-btn'+(isFav(d.id)?' active':'')+'" onclick="toggleFav(\''+d.id+'\')" title="お気に入り">'+(isFav(d.id)?'♥':'♡')+'</button>' +
             '</div></div>' +
             '<div class="flex items-start justify-between gap-3 mb-3"><h5 class="text-xl font-black text-slate-800 line-clamp-2 flex-1">'+d.name+'</h5>'+hpQrBlock+'</div>' +
             nextDateHTML +
@@ -1169,7 +1259,122 @@ window._openEdit = id => {
 };
 
 const connBadge = () => document.getElementById('conn-status').style.display='flex';
-async function startFirebase() {
+// ══════════════════════════════════════════════════════════
+// ⑤ 週次レポート描画
+// ══════════════════════════════════════════════════════════
+function drawWeeklyReport() {
+    const el = document.getElementById('weekly-report');
+    if (!el) return;
+    const now = new Date();
+    const weekAgo = new Date(now); weekAgo.setDate(weekAgo.getDate() - 7);
+    weekAgo.setHours(0,0,0,0);
+    const today = new Date(); today.setHours(0,0,0,0);
+
+    const newThis  = companies.filter(c => c.isNew && c.dateAdded && new Date(c.dateAdded) >= weekAgo).length;
+    const updThis  = companies.filter(c => !c.isNew && c.lastUpdatedAt && new Date(c.lastUpdatedAt) >= weekAgo).length;
+    const expThis  = companies.filter(c => expired(c)).length;
+    const activeN  = companies.filter(c => !expired(c)).length;
+    const urgentN  = companies.filter(c => {
+        if (expired(c)) return false;
+        const days = getDaysUntilNext(c.dates);
+        return days !== null && days <= 3;
+    }).length;
+
+    const card = (icon, label, val, color) =>
+        `<div style="background:var(--color-background-secondary);border-radius:12px;padding:1rem;text-align:center;">
+            <div style="font-size:20px;margin-bottom:4px;">${icon}</div>
+            <div style="font-size:22px;font-weight:900;color:${color};">${val}</div>
+            <div style="font-size:11px;color:var(--color-text-secondary);margin-top:2px;">${label}</div>
+        </div>`;
+
+    el.innerHTML =
+        card('🆕','今週の新規登録', newThis, '#4f46e5') +
+        card('🔄','今週の更新',     updThis, '#0891b2') +
+        card('✅','掲載中',         activeN, '#059669') +
+        card('🔥','3日以内締切',   urgentN, '#dc2626');
+
+    // コピー用テキスト生成
+    window._reportText = `【Career Link 週次レポート】${now.toLocaleDateString('ja-JP')}\n` +
+        `🆕 今週の新規登録: ${newThis}件\n` +
+        `🔄 今週の更新: ${updThis}件\n` +
+        `✅ 掲載中: ${activeN}件\n` +
+        `🔥 3日以内締切: ${urgentN}件\n` +
+        `📴 終了済み: ${expThis}件`;
+}
+
+// ══════════════════════════════════════════════════════════
+// ⑥ JSONプレビュー機能
+// ══════════════════════════════════════════════════════════
+let _previewItems = [];
+async function buildImportPreview(items) {
+    const list = document.getElementById('import-preview-list');
+    if (!list) return;
+    list.innerHTML = '<div class="text-indigo-300 text-xs">確認中...</div>';
+    const rows = await Promise.all(items.map(async d => {
+        const name = (d.name || '不明').trim();
+        const normNew = normalizeCompanyName(name);
+        const existing = companies.find(c => normalizeCompanyName(c.name) === normNew);
+        const isUpdate = !!existing;
+        return { d, isUpdate, existing };
+    }));
+    list.innerHTML = rows.map(({d, isUpdate, existing}) =>
+        `<div class="flex items-center gap-2 bg-white/5 rounded-xl px-3 py-2">
+            <span class="text-sm shrink-0">${isUpdate ? '🔄' : '🆕'}</span>
+            <span class="text-xs font-black text-indigo-100 flex-1 truncate">${d.name||'不明'}</span>
+            <span class="text-[10px] text-indigo-400">${isUpdate ? '既存・告知のみ更新' : '新規登録'}</span>
+        </div>`
+    ).join('');
+    document.getElementById('import-preview').classList.remove('hidden');
+    document.getElementById('btn-import-json').classList.add('hidden');
+    _previewItems = items;
+}
+
+async function executeImport(items) {
+    const importBtn = document.getElementById('btn-import-confirm');
+    const restoreBtn = () => {
+        if(importBtn){ importBtn.disabled=false; importBtn.textContent='✅ この内容で登録する'; }
+        document.getElementById('btn-import-json').classList.remove('hidden');
+        document.getElementById('import-preview').classList.add('hidden');
+    };
+    if(importBtn){ importBtn.disabled=true; importBtn.textContent='登録中...'; }
+    let n=0, nUpdated=0;
+    const errors=[];
+    try {
+        for(let idx=0; idx<items.length; idx++){
+            const d=items[idx];
+            const qrUrl=(d.qrUrl||'').trim();
+            let resolvedUrl=(d.url||'').trim()||qrUrl;
+            let resolvedQrData=qrUrl||(d.qrData||'').trim();
+            let qrStorageUrl='', qrImageFallback='';
+            const rawQrImage=(d.qrImage||'').trim();
+            if(rawQrImage&&rawQrImage.startsWith('data:image')){
+                const storageUrl=await uploadQRToStorage(rawQrImage, d.name||'qr');
+                if(storageUrl){qrStorageUrl=storageUrl;}
+                else{const c=await compressImage(rawQrImage,180,0.75);if(c)qrImageFallback=c;}
+            }
+            const months=Array.isArray(d.months)?d.months.map(Number).filter(v=>!isNaN(v)):String(d.months||'').split(',').map(s=>parseInt(s.trim())).filter(v=>!isNaN(v));
+            try{
+                const res=await upsertCompany({
+                    name:d.name||'不明',cate:d.cate||'その他',method:d.method||'',
+                    dates:d.dates||'',months,desc:d.desc||'',urlHp:(d.urlHp||'').trim(),
+                    url:resolvedUrl,qrData:resolvedQrData,qrStorageUrl,qrImage:qrImageFallback,
+                    hasQr:d.hasQr===true||d.hasQr==='true',endDate:'',active:true,curated:false,
+                    dateAdded:new Date().toISOString()
+                });
+                if(res==='updated'){nUpdated++;}else{n++;}
+            }catch(e){errors.push(`${d.name||'?'}: ${e.message}`);}
+        }
+    }catch(e){errors.push('予期しないエラー: '+e.message);}
+    finally{
+        restoreBtn();
+        document.getElementById('ai-json-input').value='';
+        if(errors.length>0){alert(`新規登録 ${n}件、更新 ${nUpdated}件。\n⚠ エラー:\n`+errors.slice(0,3).join('\n'));}
+        else{alert(`新規登録 ${n}件、更新（告知のみ） ${nUpdated}件。\n🛡 既存企業の基本情報は保護しました。`);}
+    }
+}
+
+// ── startFirebase の前 ──
+
     try { await auth.signInAnonymously(); }
     catch(e){
         connBadge();
@@ -1381,79 +1586,7 @@ window.addEventListener('DOMContentLoaded', () => {
     dz.addEventListener('drop',e=>e.preventDefault());
     document.getElementById('btn-pdf-import').addEventListener('click',()=>{});
 
-    // ★ v3 AI JSONインポート（QR保護ロジックをupsertCompanyに一本化）
-    document.getElementById('btn-import-json').addEventListener('click', async () => {
-        const raw = document.getElementById('ai-json-input').value.trim();
-        if (!raw) return;
-        let items;
-        try {
-            const parsed = JSON.parse(raw);
-            items = Array.isArray(parsed) ? parsed : [parsed];
-        } catch {
-            alert('JSON形式エラー。\n[ で始まり ] で終わる部分だけ貼り付けてください。');
-            return;
-        }
-        const importBtn = document.getElementById('btn-import-json');
-        const restoreBtn = () => {
-            importBtn.disabled = false;
-            importBtn.innerHTML = '<i data-lucide="zap" class="w-6 h-6"></i> 貼り付けたデータを登録する';
-            lucide.createIcons();
-        };
-        importBtn.disabled = true; importBtn.textContent = '準備中...';
-        let n = 0, nUpdated = 0;
-        const errors = [];
-        try {
-            for (let idx = 0; idx < items.length; idx++) {
-                const d = items[idx];
-                importBtn.textContent = `登録中 ${idx+1}/${items.length}件目...`;
-                const qrUrl = (d.qrUrl || '').trim();
-                let resolvedUrl  = (d.url || '').trim() || qrUrl;
-                let resolvedQrData = qrUrl || (d.qrData || '').trim();
-                let qrStorageUrl = '', qrImageFallback = '';
-                const rawQrImage = (d.qrImage || '').trim();
-                if (rawQrImage && rawQrImage.startsWith('data:image')) {
-                    importBtn.textContent = `${idx+1}/${items.length}: QR画像をStorage登録中...`;
-                    const storageUrl = await uploadQRToStorage(rawQrImage, d.name || 'qr');
-                    if (storageUrl) { qrStorageUrl = storageUrl; }
-                    else {
-                        importBtn.textContent = `${idx+1}/${items.length}: QR圧縮処理中...`;
-                        const compressed = await compressImage(rawQrImage, 180, 0.75);
-                        if (compressed) qrImageFallback = compressed;
-                    }
-                }
-                const months = Array.isArray(d.months)
-                    ? d.months.map(Number).filter(v => !isNaN(v))
-                    : String(d.months || '').split(',').map(s=>parseInt(s.trim())).filter(v=>!isNaN(v));
-                try {
-                    importBtn.textContent = `${idx+1}/${items.length}: Firestore登録中...`;
-                    // ★ upsertCompany自体が基本情報を保護するため、ここはシンプルに渡すだけ
-                    const res = await upsertCompany({
-                        name: d.name || '不明', cate: d.cate || 'その他',
-                        method: d.method || '', dates: d.dates || '', months,
-                        desc: d.desc || '', urlHp: (d.urlHp || '').trim(),
-                        url: resolvedUrl, qrData: resolvedQrData,
-                        qrStorageUrl, qrImage: qrImageFallback,
-                        hasQr: d.hasQr === true || d.hasQr === 'true',
-                        endDate: '', active: true, curated: false,
-                        dateAdded: new Date().toISOString()
-                    });
-                    if (res === 'updated') { nUpdated++; } else { n++; }
-                } catch (e) {
-                    console.error('Firestore書き込みエラー:', e);
-                    errors.push(`${d.name||'?'}: ${e.message}`);
-                }
-            }
-        } catch(e) { errors.push('予期しないエラー: ' + e.message); }
-        finally {
-            restoreBtn();
-            document.getElementById('ai-json-input').value = '';
-            if (errors.length > 0) {
-                alert(`新規登録 ${n}件、更新（告知のみ） ${nUpdated}件。\n\n⚠ エラー:\n` + errors.slice(0,3).join('\n') + '\n🛡 基本情報は保護されています。');
-            } else {
-                alert(`新規登録 ${n}件、更新（告知のみ） ${nUpdated}件。\n🛡 既存企業のHP・QR等の基本情報は保護しました。`);
-            }
-        }
-    });
+    // ⑥ JSONインポートは上部の buildImportPreview / executeImport に統合済み
 
     document.getElementById('btn-copy-prompt').addEventListener('click',e=>{
         const txt='このPDFを解析して、企業の説明会情報をJSON配列形式のみで出力してください。説明文は不要です。JSON配列だけ出力してください。\n\n⚠ 企業名は「株式会社〇〇」など正式名称で統一してください（略称・カタカナ省略・（株）の省略は不可）。\n\n項目:\nname（企業名：正式名称で記載。「（株）」は「株式会社」に展開）\ncate（業界：IT・ソフトウェア / 医療・福祉・介護 / 商社・小売・外食 / 金融・建設・その他 / その他）\nmethod（開催形式：オンライン・対面・WEB等）\ndates（日程テキスト　例：4/15, 22, 28）\nmonths（開催月の数字配列　例：[4,5]）\ndesc（先生目線での紹介文　100字以内）\nurlHp（企業名でGoogle検索して公式採用ページのURLを調べて入力してください。マイナビ・リクナビ等の就職サイトは除く。見つからなければ空文字 ""）\nurl（マイナビ・リクナビ・LINE等のエントリーURL。PDFに記載があれば入力。なければ空文字 ""）\nhasQr（QRコードが印刷されているか true/false）\nqrUrl（QRコードのURL。LINEの場合は https://line.me/R/ti/p/... の形式になります。読み取れない場合や存在しない場合は空文字 ""）';
@@ -1581,6 +1714,59 @@ window.addEventListener('DOMContentLoaded', () => {
             try { await colRef().doc(c.id).delete(); ok++; } catch(e) { ng++; console.error(e); }
         }
         alert(`${ok}件を削除しました。` + (ng ? `\n失敗: ${ng}件` : ''));
+    });
+
+    // ④ お気に入りフィルターボタン
+    document.getElementById('btn-fav-filter')?.addEventListener('click', () => {
+        showFavOnly = !showFavOnly;
+        const btn = document.getElementById('btn-fav-filter');
+        if(showFavOnly){
+            btn.textContent = '♥ お気に入りのみ';
+            btn.classList.add('text-pink-500');
+            btn.classList.remove('text-slate-400');
+        } else {
+            btn.textContent = '♡ お気に入りのみ';
+            btn.classList.remove('text-pink-500');
+            btn.classList.add('text-slate-400');
+        }
+        drawBulk();
+    });
+
+    // ⑤ レポートコピーボタン
+    document.getElementById('btn-copy-report')?.addEventListener('click', () => {
+        const txt = window._reportText || 'レポートデータがありません';
+        navigator.clipboard?.writeText(txt).catch(()=>{
+            const ta=document.createElement('textarea');ta.value=txt;
+            document.body.appendChild(ta);ta.select();document.execCommand('copy');document.body.removeChild(ta);
+        });
+        const btn = document.getElementById('btn-copy-report');
+        btn.textContent = '✅ コピーしました！';
+        setTimeout(()=>{ btn.innerHTML='<i data-lucide="copy" class="w-3.5 h-3.5 inline-block mr-1"></i> レポートをコピー'; lucide.createIcons(); }, 2000);
+    });
+
+    // ⑥ JSONプレビュー → 確認後に登録
+    document.getElementById('btn-import-json')?.addEventListener('click', async () => {
+        const raw = document.getElementById('ai-json-input').value.trim();
+        if (!raw) return;
+        let items;
+        try {
+            const parsed = JSON.parse(raw);
+            items = Array.isArray(parsed) ? parsed : [parsed];
+        } catch {
+            alert('JSON形式エラー。\n[ で始まり ] で終わる部分だけ貼り付けてください。');
+            return;
+        }
+        await buildImportPreview(items);
+    });
+
+    document.getElementById('btn-import-confirm')?.addEventListener('click', async () => {
+        await executeImport(_previewItems);
+    });
+
+    document.getElementById('btn-import-cancel')?.addEventListener('click', () => {
+        document.getElementById('import-preview').classList.add('hidden');
+        document.getElementById('btn-import-json').classList.remove('hidden');
+        _previewItems = [];
     });
 
     startFirebase();
