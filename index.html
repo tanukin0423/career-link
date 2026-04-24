@@ -1373,8 +1373,8 @@ async function executeImport(items) {
     }
 }
 
-// ── startFirebase の前 ──
-
+// ── startFirebase ──
+async function startFirebase() {
     try { await auth.signInAnonymously(); }
     catch(e){
         connBadge();
