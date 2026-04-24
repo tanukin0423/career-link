@@ -468,57 +468,116 @@
                     <p class="font-black text-indigo-100 text-base">PDFからデータを取り出す</p>
                 </div>
                 <div class="bg-white/5 rounded-[28px] p-6 border border-white/10 space-y-5">
-                    <div class="bg-amber-500/10 border border-amber-400/30 rounded-2xl p-4">
-                        <p class="text-amber-200 text-xs font-bold leading-relaxed">
-                            📌 まず使うAIを選んでください。<br>
-                            Claude・Gemini どちらも無料で使えます。<br>
-                            PDFをアップロードして指示文を貼り付けるだけで自動的にデータを取り出してくれます。
-                        </p>
+                    <!-- 入力モード切替タブ -->
+                    <div class="flex gap-2 mb-1">
+                        <button id="tab-camera" onclick="switchInputTab('camera')" class="flex-1 py-2.5 rounded-2xl text-xs font-black transition-all bg-amber-500 text-white">📷 スマホカメラ</button>
+                        <button id="tab-pdf" onclick="switchInputTab('pdf')" class="flex-1 py-2.5 rounded-2xl text-xs font-black transition-all bg-white/10 text-indigo-300">📄 PDFアップロード</button>
                     </div>
-                    <div class="grid grid-cols-2 gap-3">
-                        <a href="https://claude.ai" target="_blank" class="flex items-center justify-center gap-2 bg-indigo-600 hover:bg-indigo-500 text-white font-black py-4 rounded-2xl transition-all text-sm">
-                            <i data-lucide="external-link" class="w-4 h-4"></i> Claude.ai を開く
-                        </a>
-                        <a href="https://gemini.google.com" target="_blank" class="flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-500 text-white font-black py-4 rounded-2xl transition-all text-sm">
-                            <i data-lucide="external-link" class="w-4 h-4"></i> Gemini を開く
-                        </a>
-                    </div>
-                    <div>
-                        <p class="text-indigo-300 text-xs font-black mb-2 uppercase tracking-widest">② 下の指示文をコピーしてAIに貼り付ける</p>
-                        <div class="bg-black/30 rounded-2xl p-4 font-mono text-[11px] text-indigo-200 leading-relaxed mb-3">
-                            このPDFを解析して、企業の説明会情報をJSON配列形式のみで出力してください。<br>
-                            説明文は不要です。JSON配列だけ出力してください。<br><br>
-                            ⚠ 企業名は「株式会社〇〇」など正式名称で統一してください（略称・カタカナ省略不可）。<br><br>
-                            項目：<br>
-                            name（企業名：正式名称で記載。「（株）」は「株式会社」に展開）<br>
-                            cate（業界：IT・ソフトウェア / 医療・福祉・介護 / 商社・小売・外食 / 金融・建設・その他 / その他）<br>
-                            method（開催形式：オンライン・対面・WEB等）<br>
-                            dates（日程テキスト　例：4/15, 22, 28）<br>
-                            months（開催月の数字配列　例：[4,5]）<br>
-                            desc（先生目線での紹介文　100字以内）<br>
-                            urlHp（企業名でGoogle検索して公式採用ページのURLを調べて入力。マイナビ等の就職サイトは除く。なければ ""）<br>
-                            url（マイナビ・リクナビ・LINE等のエントリーURL。PDFに記載があれば入力。なければ ""）<br>
-                            hasQr（QRコードが印刷されているか true/false）<br>
-                            qrUrl（QRコードのURL。LINEの場合は https://line.me/... 形式。読み取れなければ空文字 ""）
-                        </div>
-                        <div class="bg-sky-500/10 border border-sky-400/30 rounded-2xl p-3 mb-3">
-                            <p class="text-sky-200 text-[11px] font-bold leading-relaxed">
-                                💡 LINE QRコードのURLはAIが読み取れない場合があります。<br>
-                                その場合は登録後、スマホでQRを読んで <strong>qrUrl欄</strong> に追加してください。
+
+                    <!-- ===== カメラモード ===== -->
+                    <div id="panel-camera">
+                        <!-- おすすめバッジ -->
+                        <div class="bg-amber-500/15 border border-amber-400/30 rounded-2xl p-4 mb-4">
+                            <p class="text-amber-200 text-xs font-bold leading-relaxed">
+                                📌 <strong>スキャナー不要・PDF不要！</strong><br>
+                                スマホでポスターをカメラ撮影するだけで、AIが自動でデータを作ってくれます。<br>
+                                <span class="text-amber-300">QRコードも同時に読み取ります。</span>
                             </p>
                         </div>
-                        <button id="btn-copy-prompt" class="w-full bg-indigo-500 hover:bg-indigo-400 py-3 rounded-2xl text-xs font-black flex items-center justify-center gap-2 transition-all">
-                            <i data-lucide="copy" class="w-4 h-4"></i>
-                            <span id="btn-copy-text">📋 指示文をコピーする</span>
-                        </button>
+
+                        <!-- 操作手順カード -->
+                        <div class="space-y-3 mb-4">
+                            <div class="flex items-start gap-3 bg-white/5 rounded-2xl p-3">
+                                <span class="bg-amber-500 rounded-full w-7 h-7 flex items-center justify-center font-black text-white text-sm shrink-0">1</span>
+                                <div>
+                                    <p class="text-indigo-100 text-xs font-black mb-1">下の指示文をコピーする</p>
+                                    <p class="text-indigo-400 text-[11px]">「📋 指示文をコピー」ボタンをタップしてコピーしてください</p>
+                                </div>
+                            </div>
+                            <div class="flex items-start gap-3 bg-white/5 rounded-2xl p-3">
+                                <span class="bg-amber-500 rounded-full w-7 h-7 flex items-center justify-center font-black text-white text-sm shrink-0">2</span>
+                                <div>
+                                    <p class="text-indigo-100 text-xs font-black mb-1">Claude.ai または Gemini を開く</p>
+                                    <p class="text-indigo-400 text-[11px]">下のボタンからアプリを開いてください</p>
+                                </div>
+                            </div>
+                            <div class="flex items-start gap-3 bg-white/5 rounded-2xl p-3">
+                                <span class="bg-amber-500 rounded-full w-7 h-7 flex items-center justify-center font-black text-white text-sm shrink-0">3</span>
+                                <div>
+                                    <p class="text-indigo-100 text-xs font-black mb-1">「＋」ボタン → カメラ → ポスターを撮影</p>
+                                    <p class="text-indigo-400 text-[11px]">ポスター全体が収まるように撮影してください</p>
+                                </div>
+                            </div>
+                            <div class="flex items-start gap-3 bg-white/5 rounded-2xl p-3">
+                                <span class="bg-amber-500 rounded-full w-7 h-7 flex items-center justify-center font-black text-white text-sm shrink-0">4</span>
+                                <div>
+                                    <p class="text-indigo-100 text-xs font-black mb-1">コピーした指示文を貼り付けて送信</p>
+                                    <p class="text-indigo-400 text-[11px]">テキスト入力欄を長押し→「貼り付け」→送信</p>
+                                </div>
+                            </div>
+                            <div class="flex items-start gap-3 bg-white/5 rounded-2xl p-3">
+                                <span class="bg-emerald-600 rounded-full w-7 h-7 flex items-center justify-center font-black text-white text-sm shrink-0">5</span>
+                                <div>
+                                    <p class="text-indigo-100 text-xs font-black mb-1">出力された [ から始まるJSON を全コピー</p>
+                                    <p class="text-indigo-400 text-[11px]">STEP2の入力欄に貼り付けて「登録」</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- ボタン群 -->
+                        <div class="space-y-3">
+                            <button id="btn-copy-prompt" class="w-full bg-amber-500 hover:bg-amber-400 active:scale-95 py-4 rounded-2xl text-sm font-black flex items-center justify-center gap-2 transition-all">
+                                <i data-lucide="copy" class="w-4 h-4"></i>
+                                <span id="btn-copy-text">📋 指示文をコピーする</span>
+                            </button>
+                            <div class="grid grid-cols-2 gap-3">
+                                <a href="https://claude.ai" target="_blank" class="flex items-center justify-center gap-2 bg-indigo-600 hover:bg-indigo-500 active:scale-95 text-white font-black py-4 rounded-2xl transition-all text-sm">
+                                    <i data-lucide="external-link" class="w-4 h-4"></i> Claude.ai
+                                </a>
+                                <a href="https://gemini.google.com" target="_blank" class="flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-500 active:scale-95 text-white font-black py-4 rounded-2xl transition-all text-sm">
+                                    <i data-lucide="external-link" class="w-4 h-4"></i> Gemini
+                                </a>
+                            </div>
+                        </div>
+
+                        <div class="bg-sky-500/10 border border-sky-400/30 rounded-2xl p-3 mt-3">
+                            <p class="text-sky-200 text-[11px] font-bold leading-relaxed">
+                                💡 独自QRコードのURLが取れなかった場合は、<br>
+                                登録後に管理一覧の「📷 QR読取」ボタンで補完できます。
+                            </p>
+                        </div>
                     </div>
-                    <div class="space-y-2">
-                        <p class="text-indigo-300 text-xs font-black uppercase tracking-widest">③ AIでの操作手順</p>
-                        <div class="space-y-2 text-xs text-indigo-200">
-                            <div class="flex items-start gap-2"><span class="bg-white/10 rounded-full w-5 h-5 flex items-center justify-center font-black shrink-0 text-[10px]">1</span><span>上のボタンでClaude.aiまたはGeminiを開く</span></div>
-                            <div class="flex items-start gap-2"><span class="bg-white/10 rounded-full w-5 h-5 flex items-center justify-center font-black shrink-0 text-[10px]">2</span><span>PDFファイルをアップロードする（画面のクリップアイコンから）</span></div>
-                            <div class="flex items-start gap-2"><span class="bg-white/10 rounded-full w-5 h-5 flex items-center justify-center font-black shrink-0 text-[10px]">3</span><span>上でコピーした指示文を貼り付けて送信する</span></div>
-                            <div class="flex items-start gap-2"><span class="bg-white/10 rounded-full w-5 h-5 flex items-center justify-center font-black shrink-0 text-[10px]">4</span><span>AIが出力した <strong>[ から始まる文字列（JSON）</strong> を全部コピーする</span></div>
+
+                    <!-- ===== PDFアップロードモード ===== -->
+                    <div id="panel-pdf" class="hidden">
+                        <div class="bg-white/5 rounded-2xl p-4 mb-4">
+                            <p class="text-indigo-300 text-xs font-bold leading-relaxed">
+                                📄 PCでPDFをお持ちの場合はこちら。<br>
+                                Claude.aiまたはGeminiにPDFをアップロードして指示文を貼り付けてください。
+                            </p>
+                        </div>
+                        <div class="space-y-3">
+                            <button id="btn-copy-prompt-pdf" class="w-full bg-indigo-500 hover:bg-indigo-400 active:scale-95 py-4 rounded-2xl text-sm font-black flex items-center justify-center gap-2 transition-all">
+                                <i data-lucide="copy" class="w-4 h-4"></i>
+                                <span id="btn-copy-text-pdf">📋 指示文をコピーする</span>
+                            </button>
+                            <div class="grid grid-cols-2 gap-3">
+                                <a href="https://claude.ai" target="_blank" class="flex items-center justify-center gap-2 bg-indigo-600 hover:bg-indigo-500 text-white font-black py-4 rounded-2xl transition-all text-sm">
+                                    <i data-lucide="external-link" class="w-4 h-4"></i> Claude.ai
+                                </a>
+                                <a href="https://gemini.google.com" target="_blank" class="flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-500 text-white font-black py-4 rounded-2xl transition-all text-sm">
+                                    <i data-lucide="external-link" class="w-4 h-4"></i> Gemini
+                                </a>
+                            </div>
+                        </div>
+                        <div class="space-y-2 mt-4">
+                            <p class="text-indigo-300 text-xs font-black uppercase tracking-widest">PDF操作手順</p>
+                            <div class="space-y-2 text-xs text-indigo-200">
+                                <div class="flex items-start gap-2"><span class="bg-white/10 rounded-full w-5 h-5 flex items-center justify-center font-black shrink-0 text-[10px]">1</span><span>上のボタンでClaude.aiまたはGeminiを開く</span></div>
+                                <div class="flex items-start gap-2"><span class="bg-white/10 rounded-full w-5 h-5 flex items-center justify-center font-black shrink-0 text-[10px]">2</span><span>クリップアイコンからPDFをアップロード</span></div>
+                                <div class="flex items-start gap-2"><span class="bg-white/10 rounded-full w-5 h-5 flex items-center justify-center font-black shrink-0 text-[10px]">3</span><span>指示文を貼り付けて送信</span></div>
+                                <div class="flex items-start gap-2"><span class="bg-white/10 rounded-full w-5 h-5 flex items-center justify-center font-black shrink-0 text-[10px]">4</span><span>[ から始まるJSONを全コピー → STEP2へ</span></div>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -1675,8 +1734,9 @@ window.addEventListener('DOMContentLoaded', () => {
         const txt='このPDFを解析して、企業の説明会情報をJSON配列形式のみで出力してください。説明文は不要です。JSON配列だけ出力してください。\n\n⚠ 企業名は「株式会社〇〇」など正式名称で統一してください（略称・カタカナ省略・（株）の省略は不可）。\n\n項目:\nname（企業名：正式名称で記載。「（株）」は「株式会社」に展開）\ncate（業界：IT・ソフトウェア / 医療・福祉・介護 / 商社・小売・外食 / 金融・建設・その他 / その他）\nmethod（開催形式：オンライン・対面・WEB等）\ndates（日程テキスト　例：4/15, 22, 28）\nmonths（開催月の数字配列　例：[4,5]）\ndesc（先生目線での紹介文　100字以内）\nurlHp（企業名でGoogle検索して公式採用ページのURLを調べて入力してください。マイナビ・リクナビ等の就職サイトは除く。見つからなければ空文字 ""）\nurl（マイナビ・リクナビ・LINE等のエントリーURL。PDFに記載があれば入力。なければ空文字 ""）\nhasQr（QRコードが印刷されているか true/false）\nqrUrl（QRコードのURL。LINEの場合は https://line.me/R/ti/p/... の形式になります。読み取れない場合や存在しない場合は空文字 ""）';
         navigator.clipboard?.writeText(txt).catch(()=>{const ta=document.createElement('textarea');ta.value=txt;document.body.appendChild(ta);ta.select();document.execCommand('copy');document.body.removeChild(ta);});
         const sp=document.getElementById('btn-copy-text'); sp.textContent='コピーしました！';
-        e.currentTarget.classList.replace('bg-indigo-500','bg-emerald-500');
-        setTimeout(()=>{sp.textContent='📋 指示文をコピーする';e.currentTarget.classList.replace('bg-emerald-500','bg-indigo-500');},2000);
+        const origCls = e.currentTarget.classList.contains('bg-amber-500') ? 'bg-amber-500' : 'bg-indigo-500';
+        e.currentTarget.classList.replace(origCls,'bg-emerald-500');
+        setTimeout(()=>{sp.textContent='📋 指示文をコピーする';e.currentTarget.classList.replace('bg-emerald-500',origCls);},2000);
     });
 
     const setupQrUpload = (inputId, previewId, dataId, clearBtnId) => {
@@ -1917,35 +1977,44 @@ window.addEventListener('DOMContentLoaded', () => {
     // ======================================================
     // 方式A: ポスター撮影→Claude API→一発登録
     // ======================================================
-    (() => {
-        const STORAGE_KEY = 'career_link_claude_api_key';
-        let posterItems = [];
+    const POSTER_API_KEY = 'career_link_claude_api_key';
 
-        // --- APIキー管理 ---
-        function getApiKey() { return localStorage.getItem(STORAGE_KEY) || ''; }
-        function showApiStatus() {
-            const k = getApiKey();
-            const el = document.getElementById('api-key-status');
-            if (!el) return;
-            if (k) {
-                el.textContent = '✅ APIキー設定済み（' + k.slice(0,8) + '...）';
-                el.style.color = '#34d399';
-                document.getElementById('poster-api-key').placeholder = '（設定済み）変更する場合のみ入力';
-            } else {
-                el.textContent = '⚠ APIキー未設定';
-                el.style.color = '#f59e0b';
-            }
+    function getClaudeApiKey() {
+        return localStorage.getItem(POSTER_API_KEY) || '';
+    }
+
+    function showApiStatus() {
+        const k = getClaudeApiKey();
+        const el = document.getElementById('api-key-status');
+        if (!el) return;
+        if (k) {
+            el.textContent = '✅ APIキー設定済み（' + k.slice(0, 10) + '...）';
+            el.style.color = '#34d399';
+            const inp = document.getElementById('poster-api-key');
+            if (inp) inp.placeholder = '（設定済み）変更する場合のみ入力';
+        } else {
+            el.textContent = '⚠ APIキー未設定 — 上の入力欄にキーを貼り付けて「保存」してください';
+            el.style.color = '#f59e0b';
         }
-        showApiStatus();
+    }
 
-        document.getElementById('btn-save-api-key')?.addEventListener('click', () => {
-            const v = document.getElementById('poster-api-key').value.trim();
-            if (!v) { alert('APIキーを入力してください'); return; }
-            if (!v.startsWith('sk-ant-')) { alert('Anthropic APIキーは sk-ant- で始まります'); return; }
-            localStorage.setItem(STORAGE_KEY, v);
-            document.getElementById('poster-api-key').value = '';
-            showApiStatus();
-        });
+    // 保存ボタン
+    document.getElementById('btn-save-api-key')?.addEventListener('click', () => {
+        const inp = document.getElementById('poster-api-key');
+        const v = (inp?.value || '').trim();
+        if (!v) { alert('APIキーを入力してください'); return; }
+        if (!v.startsWith('sk-')) { alert('Anthropic APIキーは sk- で始まります\n（例: sk-ant-api03-xxx...）'); return; }
+        localStorage.setItem(POSTER_API_KEY, v);
+        inp.value = '';
+        showApiStatus();
+        alert('✅ APIキーを保存しました！');
+    });
+
+    // ページ読み込み時にステータス表示
+    showApiStatus();
+
+    (() => {
+        let posterItems = [];
 
         // --- 状態表示ヘルパー ---
         function showPosterStep(name) {
@@ -2010,7 +2079,7 @@ window.addEventListener('DOMContentLoaded', () => {
 
         // --- Claude API呼び出し ---
         async function analyzeWithClaude(imageBase64, imageType, qrDecoded) {
-            const apiKey = getApiKey();
+            const apiKey = getClaudeApiKey();
             if (!apiKey) throw new Error('APIキーが設定されていません。先にAPIキーを保存してください。');
 
             const qrHint = qrDecoded
@@ -2096,7 +2165,7 @@ JSON配列のみ出力してください。\`\`\`json のような記法も不�
             const file = e.target.files[0];
             if (!file) return;
 
-            if (!getApiKey()) {
+            if (!getClaudeApiKey()) {
                 document.getElementById('poster-error-msg').textContent = 'APIキーが設定されていません。先にAPIキーを保存してください。';
                 showPosterStep('error');
                 return;
@@ -2180,6 +2249,29 @@ JSON配列のみ出力してください。\`\`\`json のような記法も不�
             document.getElementById('poster-capture-input').value = '';
         });
     })();
+
+    // ── タブ切替（カメラ／PDF）──
+    window.switchInputTab = function(mode) {
+        const isCamera = mode === 'camera';
+        document.getElementById('panel-camera')?.classList.toggle('hidden', !isCamera);
+        document.getElementById('panel-pdf')?.classList.toggle('hidden', isCamera);
+        const tc = document.getElementById('tab-camera');
+        const tp = document.getElementById('tab-pdf');
+        if (tc) { tc.className = 'flex-1 py-2.5 rounded-2xl text-xs font-black transition-all ' + (isCamera ? 'bg-amber-500 text-white' : 'bg-white/10 text-indigo-300'); }
+        if (tp) { tp.className = 'flex-1 py-2.5 rounded-2xl text-xs font-black transition-all ' + (!isCamera ? 'bg-blue-600 text-white' : 'bg-white/10 text-indigo-300'); }
+    };
+
+    // PDFモードのコピーボタン（指示文は共通）
+    document.getElementById('btn-copy-prompt-pdf')?.addEventListener('click', e => {
+        // btn-copy-promptと同じ指示文をコピー
+        document.getElementById('btn-copy-prompt')?.click();
+        // PDFボタン自身のラベルも変える
+        const sp = document.getElementById('btn-copy-text-pdf');
+        if (sp) {
+            sp.textContent = 'コピーしました！';
+            setTimeout(() => { sp.textContent = '📋 指示文をコピーする'; }, 2000);
+        }
+    });
 
     startFirebase();
 });
