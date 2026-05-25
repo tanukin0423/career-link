@@ -829,6 +829,7 @@ function autoEndDate(datesStr) {
     const year = new Date().getFullYear();
     let lastDate = null;
     let currentMonth = null;
+    let validDateCount = 0; // 確実に解析できた日付の数
     const tokens = datesStr.split(/[\s,、・]+/).filter(t => t.trim());
     for (const token of tokens) {
         const full    = token.match(/^(\d{1,2})\/(\d{1,2})$/);
@@ -836,9 +837,15 @@ function autoEndDate(datesStr) {
         let d = null;
         if (full)    { currentMonth = parseInt(full[1]); d = new Date(year, currentMonth-1, parseInt(full[2])); }
         else if (dayOnly && currentMonth) { d = new Date(year, currentMonth-1, parseInt(dayOnly[1])); }
-        if (d && (!lastDate || d > lastDate)) lastDate = d;
+        if (d && !isNaN(d.getTime())) {
+            validDateCount++;
+            if (!lastDate || d > lastDate) lastDate = d;
+        }
     }
-    if (!lastDate) return '';
+    // 確実な日付が1件も取れなかった場合は終了日を設定しない
+    if (!lastDate || validDateCount === 0) return '';
+    // 「随時」「以降随時」「都度」などの自由形式ワードが含まれる場合も終了日を設定しない
+    if (/随時|以降|都度|応相談|未定|随時受付/.test(datesStr)) return '';
     // 最終日の翌日を掲載終了日にする
     lastDate.setDate(lastDate.getDate() + 1);
     return lastDate.toISOString().split('T')[0]; // YYYY-MM-DD
