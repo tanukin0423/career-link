@@ -20,6 +20,11 @@
         .cate-med    { background-color:#dcfce7; color:#166534; border:1px solid #bbf7d0; }
         .cate-shosha { background-color:#ffedd5; color:#9a3412; border:1px solid #fed7aa; }
         .cate-fin    { background-color:#f3e8ff; color:#6b21a8; border:1px solid #e9d5ff; }
+        .cate-construction { background-color:#fef3c7; color:#92400e; border:1px solid #fde68a; }
+        .cate-lease  { background-color:#cffafe; color:#155e75; border:1px solid #a5f3fc; }
+        .cate-maker  { background-color:#ffe4e6; color:#9f1239; border:1px solid #fecdd3; }
+        .cate-service{ background-color:#ccfbf1; color:#0f766e; border:1px solid #99f6e4; }
+        .cate-realestate{ background-color:#e0e7ff; color:#3730a3; border:1px solid #c7d2fe; }
         .cate-other  { background-color:#f1f5f9; color:#475569; border:1px solid #e2e8f0; }
         .teacher-bubble { position:relative; background:#fff; border:2px solid #4f46e5; }
         .teacher-bubble::after {
@@ -200,8 +205,24 @@
             <div>
                 <label class="text-xs font-black text-slate-400 uppercase tracking-widest mb-1 block">業界</label>
                 <select id="edit-cate" class="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl outline-none text-sm font-bold text-slate-700">
-                    <option>IT・ソフトウェア</option><option>医療・福祉・介護</option>
-                    <option>商社・小売・外食</option><option>金融・建設・その他</option><option>その他</option>
+                    <option value="IT・ソフトウェア">IT・ソフトウェア</option>
+                    <option value="金融">金融</option>
+                    <option value="商社">商社（専門商社・ディーラー含む）</option>
+                    <option value="建設・インフラ系">建設・インフラ系</option>
+                    <option value="リース">リース（建設機械リース含む）</option>
+                    <option value="メーカー">メーカー</option>
+                    <option value="接客・サービス">接客・サービス（ホテル・結婚式場・警備等含む）</option>
+                    <option value="不動産">不動産（販売・賃貸・リース）</option>
+                    <option value="医療・福祉・介護">医療・福祉・介護（介護・医療事務含む）</option>
+                    <option value="その他">その他</option>
+                </select>
+            </div>
+            <div>
+                <label class="text-xs font-black text-slate-400 uppercase tracking-widest mb-1 block">対象学年</label>
+                <select id="edit-grade" class="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl outline-none text-sm font-bold text-slate-700">
+                    <option value="4">🎯 4年生向け</option>
+                    <option value="3">🌱 3年生向け</option>
+                    <option value="both">👥 両学年</option>
                 </select>
             </div>
             <div>
@@ -282,10 +303,10 @@
 <main id="student-view" class="flex-grow max-w-6xl mx-auto w-full p-4 md:p-8 space-y-12">
     <section class="text-center py-12 relative">
         <div class="absolute top-0 left-1/2 -translate-x-1/2 w-80 h-80 bg-indigo-500/5 blur-[100px] rounded-full -z-10"></div>
-        <h2 class="text-4xl md:text-6xl font-black text-slate-800 tracking-tighter mb-4 leading-tight">
+        <h2 id="hero-title" class="text-4xl md:text-6xl font-black text-slate-800 tracking-tighter mb-4 leading-tight">
             キャリア支援課に最近来た<span class="text-indigo-600">求人情報</span>
         </h2>
-        <p class="text-slate-500 max-w-2xl mx-auto text-base md:text-lg italic font-medium">
+        <p id="hero-sub" class="text-slate-500 max-w-2xl mx-auto text-base md:text-lg italic font-medium">
             「興味がわいたら、まずはエントリーして話をきいてみよう。」
         </p>
     </section>
@@ -308,6 +329,19 @@
                 </h3>
                 <p class="text-sm text-slate-400 font-medium mt-1">条件を指定して絞り込めます</p>
             </div>
+            <div class="flex justify-start">
+                <div id="grade-tab-track" class="relative inline-flex bg-slate-100 rounded-full p-1.5 shadow-inner" role="tablist" aria-label="学年を選択">
+                    <div id="grade-slider" class="absolute top-1.5 bottom-1.5 bg-white rounded-full shadow-md transition-all duration-300 ease-out"></div>
+                    <button type="button" id="grade-tab-4" role="tab" aria-selected="true"
+                        class="relative z-10 px-6 sm:px-8 py-3 text-xs sm:text-sm font-black rounded-full transition-colors duration-300 flex items-center gap-2 text-indigo-700 whitespace-nowrap">
+                        <span aria-hidden="true">🎯</span> 4年生：本選考・求人
+                    </button>
+                    <button type="button" id="grade-tab-3" role="tab" aria-selected="false"
+                        class="relative z-10 px-6 sm:px-8 py-3 text-xs sm:text-sm font-black rounded-full transition-colors duration-300 flex items-center gap-2 text-slate-400 whitespace-nowrap">
+                        <span aria-hidden="true">🌱</span> 3年生：説明会・OC
+                    </button>
+                </div>
+            </div>
             <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                 <div class="relative">
                     <i data-lucide="search" class="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400"></i>
@@ -319,9 +353,14 @@
                     <select id="cateFilter" class="w-full pl-11 pr-4 py-4 bg-slate-50 border border-slate-200 rounded-2xl text-sm font-bold appearance-none outline-none">
                         <option value="all">すべての業界</option>
                         <option value="IT・ソフトウェア">IT・ソフトウェア</option>
+                        <option value="金融">金融</option>
+                        <option value="商社">商社（専門商社・ディーラー含む）</option>
+                        <option value="建設・インフラ系">建設・インフラ系</option>
+                        <option value="リース">リース（建設機械リース含む）</option>
+                        <option value="メーカー">メーカー</option>
+                        <option value="接客・サービス">接客・サービス</option>
+                        <option value="不動産">不動産</option>
                         <option value="医療・福祉・介護">医療・福祉・介護</option>
-                        <option value="商社・小売・外食">商社・小売・外食</option>
-                        <option value="金融・建設・その他">金融・建設・その他</option>
                         <option value="その他">その他</option>
                     </select>
                 </div>
@@ -334,7 +373,7 @@
                 <div class="relative">
                     <i data-lucide="map-pin" class="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400"></i>
                     <select id="methodFilter" class="w-full pl-11 pr-4 py-4 bg-slate-50 border border-slate-200 rounded-2xl text-sm font-bold appearance-none outline-none">
-                        <option value="all">すべての形式</option>
+                        <option value="all">対面またはオンラインの別</option>
                         <option value="オンライン">オンラインのみ</option>
                         <option value="対面">対面を含む</option>
                     </select>
@@ -652,9 +691,34 @@
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <input type="text" id="form-name" required placeholder="企業名 *" class="p-4 bg-slate-50 border border-slate-200 rounded-2xl outline-none focus:border-indigo-400 text-sm font-bold">
                 <select id="form-cate" class="p-4 bg-slate-50 border border-slate-200 rounded-2xl outline-none font-bold text-slate-700 text-sm">
-                    <option>IT・ソフトウェア</option><option>医療・福祉・介護</option>
-                    <option>商社・小売・外食</option><option>金融・建設・その他</option><option>その他</option>
+                    <option value="IT・ソフトウェア">IT・ソフトウェア</option>
+                    <option value="金融">金融</option>
+                    <option value="商社">商社（専門商社・ディーラー含む）</option>
+                    <option value="建設・インフラ系">建設・インフラ系</option>
+                    <option value="リース">リース（建設機械リース含む）</option>
+                    <option value="メーカー">メーカー</option>
+                    <option value="接客・サービス">接客・サービス（ホテル・結婚式場・警備等含む）</option>
+                    <option value="不動産">不動産（販売・賃貸・リース）</option>
+                    <option value="医療・福祉・介護">医療・福祉・介護（介護・医療事務含む）</option>
+                    <option value="その他">その他</option>
                 </select>
+            </div>
+            <div>
+                <label class="text-xs font-black text-slate-400 uppercase tracking-widest mb-2 block">対象学年 *</label>
+                <div class="flex gap-2">
+                    <label class="flex-1 cursor-pointer">
+                        <input type="radio" name="form-grade" value="4" checked class="peer hidden">
+                        <div class="text-center py-3 rounded-2xl border border-slate-200 bg-slate-50 text-slate-500 font-black text-sm transition-all peer-checked:bg-indigo-600 peer-checked:text-white peer-checked:border-indigo-600">🎯 4年生向け</div>
+                    </label>
+                    <label class="flex-1 cursor-pointer">
+                        <input type="radio" name="form-grade" value="3" class="peer hidden">
+                        <div class="text-center py-3 rounded-2xl border border-slate-200 bg-slate-50 text-slate-500 font-black text-sm transition-all peer-checked:bg-emerald-600 peer-checked:text-white peer-checked:border-emerald-600">🌱 3年生向け</div>
+                    </label>
+                    <label class="flex-1 cursor-pointer">
+                        <input type="radio" name="form-grade" value="both" class="peer hidden">
+                        <div class="text-center py-3 rounded-2xl border border-slate-200 bg-slate-50 text-slate-500 font-black text-sm transition-all peer-checked:bg-slate-600 peer-checked:text-white peer-checked:border-slate-600">👥 両学年</div>
+                    </label>
+                </div>
             </div>
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <input type="text" id="form-method" placeholder="開催形式（例：オンライン）" class="p-4 bg-slate-50 border border-slate-200 rounded-2xl outline-none focus:border-indigo-400 text-sm">
@@ -776,9 +840,21 @@
             <select id="admin-cate-filter" class="p-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold outline-none">
                 <option value="all">すべての業界</option>
                 <option value="IT・ソフトウェア">IT</option>
+                <option value="金融">金融</option>
+                <option value="商社">商社</option>
+                <option value="建設・インフラ系">建設・インフラ系</option>
+                <option value="リース">リース</option>
+                <option value="メーカー">メーカー</option>
+                <option value="接客・サービス">接客・サービス</option>
+                <option value="不動産">不動産</option>
                 <option value="医療・福祉・介護">医療</option>
-                <option value="商社・小売・外食">商社・小売</option>
-                <option value="金融・建設・その他">金融他</option>
+                <option value="その他">その他</option>
+            </select>
+            <select id="admin-grade-filter" class="p-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold outline-none">
+                <option value="all">すべての学年</option>
+                <option value="4">🎯 4年生向け</option>
+                <option value="3">🌱 3年生向け</option>
+                <option value="both">👥 両学年</option>
             </select>
             <select id="admin-status-filter" class="p-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold outline-none">
                 <option value="all">すべて</option>
@@ -875,6 +951,7 @@ async function upsertCompany(data) {
         // ── 【保護フィールド】既存データを優先 ──
         const protectedFields = {
             cate:           existing.cate            || data.cate            || 'その他',
+            grade:          existing.grade           || data.grade           || '4',
             urlHp:          existing.urlHp           || data.urlHp           || '',
             qrStorageUrlHp: existing.qrStorageUrlHp  || data.qrStorageUrlHp  || '',
             qrImageHp:      existing.qrImageHp       || data.qrImageHp       || '',
@@ -1045,17 +1122,22 @@ const INIT = [
     {name:"エイムワールド",                          cate:"IT・ソフトウェア", method:"WEB (Google Meet)",  dates:"3/26, 4/2, 7, 9, 14, 16, 22, 24, 28",months:[3,4],  desc:"ITエンジニア・DX推進。少人数制で質問しやすい。",              url:"https://aimworld.co.jp/"},
     {name:"徳洲会グループ（事務職）",                 cate:"医療・福祉・介護", method:"オンライン",           dates:"3/27, 4/8, 10, 15, 17, 22, 5/8",      months:[3,4,5],desc:"日本最大級の医療グループ。病院経営を支える総合事務職。",        url:"https://www.tokushukai.or.jp/"},
     {name:"シンボー情報システム",                    cate:"IT・ソフトウェア", method:"オンライン",           dates:"カレンダー形式で毎日複数回開催",         months:[3,4,5],desc:"横浜本社のIT企業。人物重視の採用を実施中。",                url:"https://www.simbo.co.jp/"},
-    {name:"KOYO証券",                              cate:"金融・建設・その他",method:"WEB説明会",           dates:"4/2, 7, 9, 14, 21, 23, 28, 30",       months:[4],    desc:"独立系証券会社。資産運用のコンサルティング営業職。",          url:"https://www.koyo-sec.co.jp/"},
+    {name:"KOYO証券",                              cate:"金融",method:"WEB説明会",           dates:"4/2, 7, 9, 14, 21, 23, 28, 30",       months:[4],    desc:"独立系証券会社。資産運用のコンサルティング営業職。",          url:"https://www.koyo-sec.co.jp/"},
     {name:"旭情報サービス",                         cate:"IT・ソフトウェア", method:"WEB",                dates:"4/7, 9, 13, 17, 21, 27",              months:[4],    desc:"ITインフラ・運用管理の老舗。教育体制が充実。",               url:"https://www.aiserv.co.jp/"},
-    {name:"コンパスグループ・ジャパン",               cate:"商社・小売・外食", method:"オンライン / 現地見学",dates:"3/27, 4/9, 22 / 4/23(社食見学)",      months:[3,4],  desc:"世界最大級の外資系フードサービス。社食ランチ体験会あり。",     url:"https://www.compass-jpn.com/"},
-    {name:"ブロンコビリー",                         cate:"商社・小売・外食", method:"オンライン",           dates:"4/15（多摩大生限定枠）",               months:[4],    desc:"ステーキ・ハンバーグ専門店。学内限定の特別説明会。",          url:"https://www.bronco.co.jp/"},
+    {name:"コンパスグループ・ジャパン",               cate:"その他", method:"オンライン / 現地見学",dates:"3/27, 4/9, 22 / 4/23(社食見学)",      months:[3,4],  desc:"世界最大級の外資系フードサービス。社食ランチ体験会あり。",     url:"https://www.compass-jpn.com/"},
+    {name:"ブロンコビリー",                         cate:"その他", method:"オンライン",           dates:"4/15（多摩大生限定枠）",               months:[4],    desc:"ステーキ・ハンバーグ専門店。学内限定の特別説明会。",          url:"https://www.bronco.co.jp/"},
     {name:"シー・エス・イー",                       cate:"IT・ソフトウェア", method:"オンライン",           dates:"4/2, 4/16 等",                        months:[4],    desc:"創業50年超。セキュリティソリューションに強み。",             url:"https://www.cseltd.co.jp/"}
 ];
-const CC = {"IT・ソフトウェア":"cate-it","医療・福祉・介護":"cate-med","商社・小売・外食":"cate-shosha","金融・建設・その他":"cate-fin"};
+const CC = {"IT・ソフトウェア":"cate-it","医療・福祉・介護":"cate-med","商社":"cate-shosha","金融":"cate-fin","建設・インフラ系":"cate-construction","リース":"cate-lease","メーカー":"cate-maker","接客・サービス":"cate-service","不動産":"cate-realestate"};
 
 let companies = [];
 let sortMode  = 'date-asc';
 let isAdmin   = false;
+let currentGrade = '4'; // 学生画面のタブ状態：'4'=4年生／'3'=3年生
+const matchesGrade = d => {
+    const g = d.grade || '4'; // 学年未設定の既存データは4年生扱い（後方互換）
+    return g === currentGrade || g === 'both';
+};
 
 const expired = d => {
     if (d.active === false) return true;
@@ -1146,7 +1228,7 @@ function updateMonthFilter() {
     const prev = sel.value;
     const curMonth = new Date().getMonth() + 1;
     const monthSet = new Set();
-    companies.filter(d => !expired(d)).forEach(d => {
+    companies.filter(d => !expired(d) && matchesGrade(d)).forEach(d => {
         (d.months || []).forEach(m => { if (m >= curMonth) monthSet.add(m); });
     });
     const months = [...monthSet].sort((a, b) => a - b);
@@ -1167,6 +1249,7 @@ function drawThisWeekBanner() {
     const nextWeek = new Date(today); nextWeek.setDate(today.getDate() + 7);
     const list = companies.filter(d => {
         if (expired(d)) return false;
+        if (!matchesGrade(d)) return false;
         return parseAllDates(d.dates).some(dt => dt >= today && dt <= nextWeek);
     }).sort((a,b) => {
         const da = parseAllDates(a.dates).filter(d=>d>=today)[0] || new Date(9999,0,1);
@@ -1198,7 +1281,7 @@ function drawThisWeekBanner() {
 function drawCurated() {
     const el = document.getElementById('curated-container');
     if (!el) return;
-    const list = companies.filter(c => c.curated && !expired(c)).sort((a,b) => new Date(b.dateAdded||0)-new Date(a.dateAdded||0));
+    const list = companies.filter(c => c.curated && !expired(c) && matchesGrade(c)).sort((a,b) => new Date(b.dateAdded||0)-new Date(a.dateAdded||0));
     if (!list.length) {
         el.innerHTML = '<div class="col-span-full"><div class="teacher-bubble p-8 rounded-[40px] shadow-sm mb-6">' +
             '<h4 class="text-2xl font-black text-indigo-600 mb-4 flex items-center gap-2"><i data-lucide="message-circle"></i> 先生からのメッセージ</h4>' +
@@ -1245,6 +1328,7 @@ function drawBulk() {
     const me = document.getElementById('methodFilter')?.value||'all';
     let list = companies.filter(d => {
         if (expired(d)) return false;
+        if (!matchesGrade(d)) return false;
         if (showFavOnly && !isFav(d.id)) return false;
         const sk = d.name?.toLowerCase().includes(kw)||d.desc?.toLowerCase().includes(kw);
         const sc = ca==='all'||d.cate===ca;
@@ -1263,7 +1347,7 @@ function drawBulk() {
     if (sortMode==='date-asc')  unpinned.sort((a,b)=>getNext(a)-getNext(b));
     else if (sortMode==='date-desc') unpinned.sort((a,b)=>getNext(b)-getNext(a));
     else {
-        const co={'IT・ソフトウェア':1,'医療・福祉・介護':2,'商社・小売・外食':3,'金融・建設・その他':4,'その他':5};
+        const co={'IT・ソフトウェア':1,'金融':2,'商社':3,'建設・インフラ系':4,'リース':5,'メーカー':6,'不動産':7,'接客・サービス':8,'医療・福祉・介護':9,'その他':10};
         unpinned.sort((a,b)=>{ const ca=co[a.cate]||9,cb=co[b.cate]||9; return ca!==cb?ca-cb:getNext(a)-getNext(b); });
     }
     // ピン留め + 通常リストを結合
@@ -1327,14 +1411,16 @@ function drawAdmin() {
     if (!el) return;
     const kw=(document.getElementById('admin-search')?.value||'').toLowerCase();
     const ca=document.getElementById('admin-cate-filter')?.value||'all';
+    const gr=document.getElementById('admin-grade-filter')?.value||'all';
     const st=document.getElementById('admin-status-filter')?.value||'all';
     const filtered=companies.filter(d=>{
         const sk=d.name?.toLowerCase().includes(kw);
         const sc=ca==='all'||d.cate===ca;
+        const sg=gr==='all'||(d.grade||'4')===gr;
         const ex=expired(d);
         const hasUrl=!!(d.qrStorageUrl||d.qrData||d.qrImage||d.url);
         const ss=st==='all'||(st==='active'&&!ex)||(st==='expired'&&ex)||(st==='noqr'&&!ex&&!hasUrl);
-        return sk&&sc&&ss;
+        return sk&&sc&&sg&&ss;
     });
     if(cnt) cnt.textContent=companies.length+'件';
     if(!filtered.length){el.innerHTML='<div class="p-12 text-center text-slate-400 font-bold">該当する企業がありません</div>';lucide.createIcons();return;}
@@ -1342,9 +1428,11 @@ function drawAdmin() {
         const ex=expired(d);
         const hasUrl=!!(d.qrStorageUrl||d.qrData||d.qrImage||d.url);
         const lbl=d.endDate?'終了日:'+d.endDate:(d.active===false?'手動終了':'無期限');
+        const gradeLbl={'4':'🎯 4年生','3':'🌱 3年生','both':'👥 両学年'}[d.grade||'4'];
         return '<div class="p-5 flex flex-col md:flex-row items-start md:items-center justify-between hover:bg-slate-50 gap-4 border-b border-slate-100'+(ex?' opacity-60':'')+'">' +
             '<div class="flex-1 min-w-0"><div class="flex items-center gap-2 flex-wrap"><span class="font-black text-slate-800 text-sm">'+d.name+'</span>' +
             '<span class="text-[10px] px-2 py-0.5 rounded font-black '+(CC[d.cate]||'cate-other')+'">'+(d.cate||'')+'</span>' +
+            '<span class="text-[10px] px-2 py-0.5 rounded font-black bg-slate-100 text-slate-600">'+gradeLbl+'</span>' +
             (d.curated&&!ex?'<span class="text-[10px] bg-amber-100 text-amber-700 px-2 py-0.5 rounded font-black">⭐ 厳選中</span>':'') +
             (ex?'<span class="text-[10px] bg-slate-200 text-slate-500 px-2 py-0.5 rounded font-black">📴 終了（学生非表示）</span>':'<span class="text-[10px] bg-emerald-100 text-emerald-700 px-2 py-0.5 rounded font-black">✅ 掲載中</span>') +
             '</div><div class="text-[11px] text-slate-400 font-bold mt-1">'+(d.method||'—')+' ／ '+(d.dates||'日程未定')+' ／ '+lbl+
@@ -1376,6 +1464,7 @@ window._openEdit = id => {
     document.getElementById('edit-doc-id').value  = id;
     document.getElementById('edit-name').value    = d.name   ||'';
     document.getElementById('edit-cate').value    = d.cate   ||'IT・ソフトウェア';
+    document.getElementById('edit-grade').value   = d.grade  ||'4';
     document.getElementById('edit-method').value  = d.method ||'';
     document.getElementById('edit-dates').value   = d.dates  ||'';
     document.getElementById('edit-months').value  = (d.months||[]).join(',');
@@ -1555,6 +1644,40 @@ window.addEventListener('DOMContentLoaded', () => {
     companies=INIT.map((d,i)=>({...d,id:'local-'+i,curated:false,active:true,endDate:''}));
     redrawAll();
 
+    // ── 学年タブ切替（4年生／3年生） ──
+    const gradeTabs = { '4': document.getElementById('grade-tab-4'), '3': document.getElementById('grade-tab-3') };
+    const gradeCopy = {
+        '4': { title: 'キャリア支援課に最近来た<span class="text-indigo-600">求人情報</span>', sub: '「興味がわいたら、まずはエントリーして話をきいてみよう。」' },
+        '3': { title: 'キャリア支援課に最近来た<span class="text-indigo-600">説明会・オープンカンパニー情報</span>', sub: '「気になる1社に、まずは参加してみよう。視野を広げる第一歩に。」' }
+    };
+    function setGradeSlider() {
+        const slider = document.getElementById('grade-slider');
+        const active = gradeTabs[currentGrade];
+        if (!slider || !active) return;
+        slider.style.width = active.offsetWidth + 'px';
+        slider.style.left  = active.offsetLeft + 'px';
+    }
+    function applyGrade(g) {
+        currentGrade = g;
+        Object.entries(gradeTabs).forEach(([k,btn]) => {
+            if (!btn) return;
+            btn.classList.toggle('text-indigo-700', k===g);
+            btn.classList.toggle('text-slate-400', k!==g);
+            btn.setAttribute('aria-selected', k===g ? 'true' : 'false');
+        });
+        const copy = gradeCopy[g];
+        const titleEl = document.getElementById('hero-title');
+        const subEl   = document.getElementById('hero-sub');
+        if (titleEl) titleEl.innerHTML   = copy.title;
+        if (subEl)   subEl.textContent   = copy.sub;
+        setGradeSlider();
+        redrawAll();
+    }
+    gradeTabs['4']?.addEventListener('click', () => applyGrade('4'));
+    gradeTabs['3']?.addEventListener('click', () => applyGrade('3'));
+    window.addEventListener('resize', setGradeSlider);
+    applyGrade(currentGrade);
+
     ['bulk-search','cateFilter','monthFilter','methodFilter'].forEach(id=>{
         document.getElementById(id)?.addEventListener('input',drawBulk);
         document.getElementById(id)?.addEventListener('change',drawBulk);
@@ -1574,7 +1697,7 @@ window.addEventListener('DOMContentLoaded', () => {
         drawBulk(); lucide.createIcons();
     });
 
-    ['admin-search','admin-cate-filter','admin-status-filter'].forEach(id=>{
+    ['admin-search','admin-cate-filter','admin-grade-filter','admin-status-filter'].forEach(id=>{
         document.getElementById(id)?.addEventListener('input',drawAdmin);
         document.getElementById(id)?.addEventListener('change',drawAdmin);
     });
@@ -1631,6 +1754,7 @@ window.addEventListener('DOMContentLoaded', () => {
         const u = {
             name: document.getElementById('edit-name').value.trim(),
             cate: document.getElementById('edit-cate').value,
+            grade: document.getElementById('edit-grade').value,
             method: document.getElementById('edit-method').value.trim(),
             dates: document.getElementById('edit-dates').value.trim(),
             months, desc: document.getElementById('edit-desc').value.trim(),
@@ -1664,6 +1788,7 @@ window.addEventListener('DOMContentLoaded', () => {
         const item = {
             name: document.getElementById('form-name').value.trim(),
             cate: document.getElementById('form-cate').value,
+            grade: document.querySelector('input[name="form-grade"]:checked')?.value || '4',
             method: document.getElementById('form-method').value.trim(),
             dates: document.getElementById('form-dates').value.trim(),
             months, desc: document.getElementById('form-desc').value.trim(),
@@ -1738,7 +1863,7 @@ window.addEventListener('DOMContentLoaded', () => {
     // ⑥ JSONインポートは上部の buildImportPreview / executeImport に統合済み
 
     document.getElementById('btn-copy-prompt').addEventListener('click',e=>{
-        const txt='このPDFを解析して、企業の説明会情報をJSON配列形式のみで出力してください。説明文は不要です。JSON配列だけ出力してください。\n\n⚠ 企業名は「株式会社〇〇」など正式名称で統一してください（略称・カタカナ省略・（株）の省略は不可）。\n\n項目:\nname（企業名：正式名称で記載。「（株）」は「株式会社」に展開）\ncate（業界：IT・ソフトウェア / 医療・福祉・介護 / 商社・小売・外食 / 金融・建設・その他 / その他）\nmethod（開催形式：オンライン・対面・WEB等）\ndates（日程テキスト　例：4/15, 22, 28）\nmonths（開催月の数字配列　例：[4,5]）\ndesc（先生目線での紹介文　100字以内）\nurlHp（企業名でGoogle検索して公式採用ページのURLを調べて入力してください。マイナビ・リクナビ等の就職サイトは除く。見つからなければ空文字 ""）\nurl（マイナビ・リクナビ・LINE等のエントリーURL。PDFに記載があれば入力。なければ空文字 ""）\nhasQr（QRコードが印刷されているか true/false）\nqrUrl（QRコードのURL。LINEの場合は https://line.me/R/ti/p/... の形式になります。読み取れない場合や存在しない場合は空文字 ""）';
+        const txt='このPDFを解析して、企業の説明会情報をJSON配列形式のみで出力してください。説明文は不要です。JSON配列だけ出力してください。\n\n⚠ 企業名は「株式会社〇〇」など正式名称で統一してください（略称・カタカナ省略・（株）の省略は不可）。\n\n項目:\nname（企業名：正式名称で記載。「（株）」は「株式会社」に展開）\ncate（業界：IT・ソフトウェア / 金融 / 商社（専門商社・ディーラー含む） / 建設・インフラ系 / リース（建設機械リース含む） / メーカー / 接客・サービス（ホテル・結婚式場・警備等含む） / 不動産（販売・賃貸・リース） / 医療・福祉・介護（介護・医療事務含む） / その他）\nmethod（開催形式：オンライン・対面・WEB等）\ndates（日程テキスト　例：4/15, 22, 28）\nmonths（開催月の数字配列　例：[4,5]）\ndesc（先生目線での紹介文　100字以内）\nurlHp（企業名でGoogle検索して公式採用ページのURLを調べて入力してください。マイナビ・リクナビ等の就職サイトは除く。見つからなければ空文字 ""）\nurl（マイナビ・リクナビ・LINE等のエントリーURL。PDFに記載があれば入力。なければ空文字 ""）\nhasQr（QRコードが印刷されているか true/false）\nqrUrl（QRコードのURL。LINEの場合は https://line.me/R/ti/p/... の形式になります。読み取れない場合や存在しない場合は空文字 ""）';
         navigator.clipboard?.writeText(txt).catch(()=>{const ta=document.createElement('textarea');ta.value=txt;document.body.appendChild(ta);ta.select();document.execCommand('copy');document.body.removeChild(ta);});
         const sp=document.getElementById('btn-copy-text'); sp.textContent='コピーしました！';
         const origCls = e.currentTarget.classList.contains('bg-amber-500') ? 'bg-amber-500' : 'bg-indigo-500';
@@ -2099,7 +2224,7 @@ window.addEventListener('DOMContentLoaded', () => {
 
 項目：
 name（企業名：正式名称で記載。「（株）」は「株式会社」に展開）
-cate（業界：IT・ソフトウェア / 医療・福祉・介護 / 商社・小売・外食 / 金融・建設・その他 / その他）
+cate（業界：IT・ソフトウェア / 金融 / 商社（専門商社・ディーラー含む） / 建設・インフラ系 / リース（建設機械リース含む） / メーカー / 接客・サービス（ホテル・結婚式場・警備等含む） / 不動産（販売・賃貸・リース） / 医療・福祉・介護（介護・医療事務含む） / その他）
 method（開催形式：オンライン・対面・WEB等）
 dates（日程テキスト　例：4/15, 22, 28）
 months（開催月の数字配列　例：[4,5]）
