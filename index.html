@@ -247,6 +247,13 @@
                 </label>
                 <input type="url" id="edit-url-hp" placeholder="https://（企業公式サイト）" class="w-full p-3 bg-indigo-50 border border-indigo-200 rounded-xl outline-none focus:border-indigo-500 text-sm">
             </div>
+            <div id="edit-url-hp-bygrade" class="sm:col-span-2 hidden bg-amber-50 border border-amber-100 rounded-2xl p-4 space-y-2">
+                <p class="text-[11px] text-amber-700 font-bold leading-relaxed">👥 両学年の場合、学年ごとに別のURLを見せたいときだけ入力してください（空欄なら上の共通URLが使われます）</p>
+                <label class="text-xs font-black text-indigo-500 uppercase tracking-widest mb-1 block">🎯 4年生向けURL（未入力で共通URLを使用）</label>
+                <input type="url" id="edit-url-hp-4" placeholder="https://（4年生向けページ）" class="w-full p-3 bg-white border border-amber-200 rounded-xl outline-none focus:border-amber-500 text-sm">
+                <label class="text-xs font-black text-emerald-600 uppercase tracking-widest mb-1 block">🌱 3年生向けURL（未入力で共通URLを使用）</label>
+                <input type="url" id="edit-url-hp-3" placeholder="https://（3年生向けページ）" class="w-full p-3 bg-white border border-amber-200 rounded-xl outline-none focus:border-amber-500 text-sm">
+            </div>
             <div class="sm:col-span-2">
                 <label class="text-xs font-black text-indigo-400 uppercase tracking-widest mb-1 block">🔵 HP用QRコード画像（URLがない場合）</label>
                 <div class="flex items-center gap-3">
@@ -731,6 +738,13 @@
                     <span class="w-3 h-3 rounded-full bg-indigo-500 inline-block"></span> 公式HP URL
                 </label>
                 <input type="url" id="form-url-hp" placeholder="https://（企業公式サイト）空欄でもOK" class="w-full p-3 bg-white border border-indigo-200 rounded-xl outline-none focus:border-indigo-500 text-sm">
+                <div id="form-url-hp-bygrade" class="hidden bg-amber-50 border border-amber-100 rounded-xl p-3 space-y-2">
+                    <p class="text-[11px] text-amber-700 font-bold leading-relaxed">👥 両学年の場合、学年ごとに別のURLを見せたいときだけ入力してください（空欄なら上の共通URLが使われます）</p>
+                    <label class="text-xs font-black text-indigo-500 uppercase tracking-widest block">🎯 4年生向けURL</label>
+                    <input type="url" id="form-url-hp-4" placeholder="https://（4年生向けページ）" class="w-full p-3 bg-white border border-amber-200 rounded-xl outline-none focus:border-amber-500 text-sm">
+                    <label class="text-xs font-black text-emerald-600 uppercase tracking-widest block">🌱 3年生向けURL</label>
+                    <input type="url" id="form-url-hp-3" placeholder="https://（3年生向けページ）" class="w-full p-3 bg-white border border-amber-200 rounded-xl outline-none focus:border-amber-500 text-sm">
+                </div>
                 <label class="text-xs font-black text-indigo-400 block">🔵 HP用QRコード画像（URLがない場合）</label>
                 <div class="flex items-center gap-3">
                     <label class="flex-1 cursor-pointer">
@@ -954,6 +968,8 @@ async function upsertCompany(data) {
         const protectedFields = {
             cate:           existing.cate            || data.cate            || 'その他',
             grade:          existing.grade           || data.grade           || '4',
+            urlHp4:         existing.urlHp4          || data.urlHp4          || '',
+            urlHp3:         existing.urlHp3          || data.urlHp3          || '',
             urlHp:          existing.urlHp           || data.urlHp           || '',
             qrStorageUrlHp: existing.qrStorageUrlHp  || data.qrStorageUrlHp  || '',
             qrImageHp:      existing.qrImageHp       || data.qrImageHp       || '',
@@ -1141,6 +1157,14 @@ const matchesGrade = d => {
     const g = d.grade || '4'; // 学年未設定の既存データは4年生扱い（後方互換）
     return g === currentGrade || g === 'both';
 };
+// 両学年（both）の企業で、学年別に別のHP URLが登録されていればそちらを優先する
+const effectiveUrlHp = d => {
+    if (d.grade === 'both') {
+        if (currentGrade === '4' && d.urlHp4) return d.urlHp4;
+        if (currentGrade === '3' && d.urlHp3) return d.urlHp3;
+    }
+    return d.urlHp || '';
+};
 
 const expired = d => {
     if (d.active === false) return true;
@@ -1293,11 +1317,12 @@ function drawCurated() {
     } else {
         el.innerHTML = list.map(d => {
             const hpQrSrcC = d.qrStorageUrlHp || d.qrImageHp;
-            const hpQrUrlC = d.urlHp || d.qrDataHp;
+            const effHpC = effectiveUrlHp(d);
+            const hpQrUrlC = effHpC || d.qrDataHp;
             const hpQrBlockC = hpQrSrcC
-                ? '<div class="flex flex-col items-center gap-1 shrink-0"><img src="'+hpQrSrcC+'" class="w-20 h-20 rounded-xl border border-indigo-200 object-contain bg-white" alt="HP QR">'+(d.urlHp?'<a href="'+d.urlHp+'" target="_blank" class="text-[10px] text-indigo-500 font-black hover:underline whitespace-nowrap">HPを見る↗</a>':'')+'</div>'
+                ? '<div class="flex flex-col items-center gap-1 shrink-0"><img src="'+hpQrSrcC+'" class="w-20 h-20 rounded-xl border border-indigo-200 object-contain bg-white" alt="HP QR">'+(effHpC?'<a href="'+effHpC+'" target="_blank" class="text-[10px] text-indigo-500 font-black hover:underline whitespace-nowrap">HPを見る↗</a>':'')+'</div>'
                 : hpQrUrlC ? '<div class="flex flex-col items-center gap-1 shrink-0"><div data-qr-url="'+hpQrUrlC+'" data-qr-size="80" class="flex justify-center w-20 h-20"></div><a href="'+hpQrUrlC+'" target="_blank" class="text-[10px] text-indigo-500 font-black hover:underline whitespace-nowrap">HPを見る↗</a></div>'
-                : (d.urlHp ? '<div class="flex flex-col items-center justify-center gap-1 shrink-0 w-20"><div class="w-20 h-20 bg-indigo-50 rounded-xl border border-indigo-200 flex items-center justify-center text-indigo-300 text-[10px] font-bold text-center leading-tight px-1">HP<br>QR未登録</div><a href="'+d.urlHp+'" target="_blank" class="text-[10px] text-indigo-500 font-black hover:underline whitespace-nowrap">HPを見る↗</a></div>' : '');
+                : (effHpC ? '<div class="flex flex-col items-center justify-center gap-1 shrink-0 w-20"><div class="w-20 h-20 bg-indigo-50 rounded-xl border border-indigo-200 flex items-center justify-center text-indigo-300 text-[10px] font-bold text-center leading-tight px-1">HP<br>QR未登録</div><a href="'+effHpC+'" target="_blank" class="text-[10px] text-indigo-500 font-black hover:underline whitespace-nowrap">HPを見る↗</a></div>' : '');
             const entrySrcC = d.qrStorageUrl || d.qrImage;
             const entryUrlC = d.qrData || d.url;
             const entryQrBlockC = entrySrcC
@@ -1377,11 +1402,12 @@ function drawBulk() {
             nextDateHTML = '<div class="flex items-center gap-3 mb-4"><div class="'+bgCol+' text-white rounded-2xl px-4 py-3 text-center min-w-[72px] shadow-md"><div class="text-[10px] font-black opacity-80 tracking-widest">'+label+'</div><div class="text-2xl font-black leading-none">'+mon+'/'+day2+'</div><div class="text-[11px] font-bold opacity-90">('+wday+')</div></div><div>'+badge+'<p class="text-[11px] text-slate-400 font-bold mt-1">'+(d.method||'')+'</p></div></div>';
         }
         const hpQrSrc = d.qrStorageUrlHp || d.qrImageHp;
-        const hpQrUrl = d.urlHp || d.qrDataHp;
+        const effHp = effectiveUrlHp(d);
+        const hpQrUrl = effHp || d.qrDataHp;
         const hpQrBlock = hpQrSrc
-            ? '<div class="flex flex-col items-center gap-1 shrink-0"><img src="'+hpQrSrc+'" class="w-16 h-16 rounded-lg border border-indigo-200 object-contain bg-white" alt="HP QR">'+(d.urlHp?'<a href="'+d.urlHp+'" target="_blank" class="text-[10px] text-indigo-500 font-black hover:underline whitespace-nowrap">HPを見る↗</a>':'')+'</div>'
+            ? '<div class="flex flex-col items-center gap-1 shrink-0"><img src="'+hpQrSrc+'" class="w-16 h-16 rounded-lg border border-indigo-200 object-contain bg-white" alt="HP QR">'+(effHp?'<a href="'+effHp+'" target="_blank" class="text-[10px] text-indigo-500 font-black hover:underline whitespace-nowrap">HPを見る↗</a>':'')+'</div>'
             : hpQrUrl ? '<div class="flex flex-col items-center gap-1 shrink-0"><div data-qr-url="'+hpQrUrl+'" data-qr-size="64" class="flex justify-center w-16 h-16"></div><a href="'+hpQrUrl+'" target="_blank" class="text-[10px] text-indigo-500 font-black hover:underline whitespace-nowrap">HPを見る↗</a></div>'
-            : (d.urlHp ? '<div class="flex flex-col items-center justify-center gap-1 shrink-0 w-16"><div class="w-16 h-16 bg-indigo-50 rounded-lg border border-indigo-200 flex items-center justify-center text-indigo-300 text-[10px] font-bold text-center leading-tight px-1">HP<br>QR未登録</div><a href="'+d.urlHp+'" target="_blank" class="text-[10px] text-indigo-500 font-black hover:underline whitespace-nowrap">HPを見る↗</a></div>' : '');
+            : (effHp ? '<div class="flex flex-col items-center justify-center gap-1 shrink-0 w-16"><div class="w-16 h-16 bg-indigo-50 rounded-lg border border-indigo-200 flex items-center justify-center text-indigo-300 text-[10px] font-bold text-center leading-tight px-1">HP<br>QR未登録</div><a href="'+effHp+'" target="_blank" class="text-[10px] text-indigo-500 font-black hover:underline whitespace-nowrap">HPを見る↗</a></div>' : '');
         const entrySrc = d.qrStorageUrl || d.qrImage;
         const entryUrl = d.qrData || d.url;
         const entryQrBlock = entrySrc
@@ -1473,6 +1499,9 @@ window._openEdit = id => {
     document.getElementById('edit-months').value  = (d.months||[]).join(',');
     document.getElementById('edit-desc').value    = d.desc   ||'';
     document.getElementById('edit-url-hp').value  = d.urlHp  ||'';
+    document.getElementById('edit-url-hp-4').value = d.urlHp4 ||'';
+    document.getElementById('edit-url-hp-3').value = d.urlHp3 ||'';
+    document.getElementById('edit-url-hp-bygrade').classList.toggle('hidden', (d.grade||'4') !== 'both');
     document.getElementById('edit-url').value     = d.url    ||'';
     document.getElementById('edit-enddate').value = d.endDate||'';
     document.getElementById('edit-modal-title').textContent='編集：'+d.name;
@@ -1678,6 +1707,17 @@ window.addEventListener('DOMContentLoaded', () => {
         redrawAll();
     }
     gradeTabs['4']?.addEventListener('click', () => applyGrade('4'));
+
+    // 追加フォーム：学年ラジオで「両学年向けURL」欄の表示を切替
+    document.querySelectorAll('input[name="form-grade"]').forEach(r => {
+        r.addEventListener('change', () => {
+            document.getElementById('form-url-hp-bygrade')?.classList.toggle('hidden', r.value !== 'both' || !r.checked);
+        });
+    });
+    // 編集モーダル：学年セレクトで「両学年向けURL」欄の表示を切替
+    document.getElementById('edit-grade')?.addEventListener('change', e => {
+        document.getElementById('edit-url-hp-bygrade')?.classList.toggle('hidden', e.target.value !== 'both');
+    });
     gradeTabs['3']?.addEventListener('click', () => applyGrade('3'));
     window.addEventListener('resize', setGradeSlider);
     applyGrade(currentGrade);
@@ -1755,6 +1795,8 @@ window.addEventListener('DOMContentLoaded', () => {
         }
         const editUrl   = document.getElementById('edit-url').value.trim();
         const editUrlHp = document.getElementById('edit-url-hp').value.trim();
+        const editUrlHp4 = document.getElementById('edit-url-hp-4').value.trim();
+        const editUrlHp3 = document.getElementById('edit-url-hp-3').value.trim();
         const u = {
             name: document.getElementById('edit-name').value.trim(),
             cate: document.getElementById('edit-cate').value,
@@ -1762,7 +1804,7 @@ window.addEventListener('DOMContentLoaded', () => {
             method: document.getElementById('edit-method').value.trim(),
             dates: document.getElementById('edit-dates').value.trim(),
             months, desc: document.getElementById('edit-desc').value.trim(),
-            urlHp: editUrlHp, url: editUrl,
+            urlHp: editUrlHp, urlHp4: editUrlHp4, urlHp3: editUrlHp3, url: editUrl,
             endDate: document.getElementById('edit-enddate').value || '',
             qrStorageUrlHp: editQrStorageUrlHp, qrImageHp: editQrImageHp,
             qrStorageUrl: editQrStorageUrl, qrImage: editQrImage,
@@ -1788,6 +1830,8 @@ window.addEventListener('DOMContentLoaded', () => {
             formQrStorageUrl = await uploadQRToStorage(rawQrForm, document.getElementById('form-name').value.trim() || 'qr');
         }
         const formUrlHp = document.getElementById('form-url-hp').value.trim() || '';
+        const formUrlHp4 = document.getElementById('form-url-hp-4').value.trim() || '';
+        const formUrlHp3 = document.getElementById('form-url-hp-3').value.trim() || '';
         const formUrl   = document.getElementById('form-url').value.trim() || '';
         const item = {
             name: document.getElementById('form-name').value.trim(),
@@ -1796,7 +1840,7 @@ window.addEventListener('DOMContentLoaded', () => {
             method: document.getElementById('form-method').value.trim(),
             dates: document.getElementById('form-dates').value.trim(),
             months, desc: document.getElementById('form-desc').value.trim(),
-            urlHp: formUrlHp, url: formUrl,
+            urlHp: formUrlHp, urlHp4: formUrlHp4, urlHp3: formUrlHp3, url: formUrl,
             endDate: document.getElementById('form-enddate').value || '',
             qrStorageUrlHp: formQrStorageUrlHp, qrImageHp: formQrImageHp,
             qrStorageUrl: formQrStorageUrl, qrImage: '', qrData: formUrl || '',
