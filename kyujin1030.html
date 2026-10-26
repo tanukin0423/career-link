@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>10/30 求人紹介会 | Career Link</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&family=Noto+Sans+JP:wght@400;700;900&display=swap');
+    body { font-family: 'Inter', 'Noto Sans JP', sans-serif; scroll-behavior: smooth; }
+    .hidden { display: none !important; }
+    .cate-it     { background-color:#dbeafe; color:#1e40af; border:1px solid #bfdbfe; }
+    .cate-shosha { background-color:#ffedd5; color:#9a3412; border:1px solid #fed7aa; }
+    .cate-construction { background-color:#fef3c7; color:#92400e; border:1px solid #fde68a; }
+    .cate-lease  { background-color:#cffafe; color:#155e75; border:1px solid #a5f3fc; }
+    .cate-other  { background-color:#f1f5f9; color:#475569; border:1px solid #e2e8f0; }
+    .hero-band { background: radial-gradient(120% 140% at 0% 0%, #4338ca 0%, #312e81 55%, #1e1b4b 100%); }
+    .ticket { position: relative; background: #fff; }
+    .ticket::before { content:''; position:absolute; left:-14px; top:calc(50% - 14px); width:28px; height:28px; border-radius:50%; background:#312e81; }
+    .ticket-perf { border-left: 2px dashed #c7d2fe; }
+    .stamp { transform: rotate(-12deg); border: 3px solid #f97316; color:#f97316; }
+    /* 求人票の短冊：左端にとじ穴 */
+    .slip { position:relative; transition: box-shadow .25s, border-color .25s, opacity .25s; }
+    .slip::before { content:''; position:absolute; left:14px; top:22px; width:10px; height:10px; border-radius:50%; background:#f1f5f9; border:1px solid #e2e8f0; }
+    .slip.lit { border-color:#f97316; box-shadow:0 0 0 4px #ffedd5; }
+    .slip.dim { opacity:.45; }
+    .chip[aria-pressed="true"] { background:#4f46e5; color:#fff; border-color:#4f46e5; }
+    .teacher-bubble { position:relative; background:#fff; border:2px solid #4f46e5; }
+    .teacher-bubble::after { content:''; position:absolute; bottom:-12px; left:30px; border-width:12px 12px 0; border-style:solid; border-color:#4f46e5 transparent; }
+    a:focus-visible, button:focus-visible { outline: 3px solid #f97316; outline-offset: 2px; }
+    @media (prefers-reduced-motion: reduce) { * { scroll-behavior:auto !important; transition:none !important; } }
+</style>
+</head>
+<body class="bg-slate-50 text-slate-800">
+
+<nav class="bg-white/90 backdrop-blur border-b border-slate-100 sticky top-0 z-50">
+    <div class="max-w-5xl mx-auto px-4 h-16 flex items-center justify-between">
+        <a href="index.html" class="flex items-center gap-3">
+            <div class="bg-indigo-600 w-9 h-9 rounded-xl text-white shadow-lg flex items-center justify-center font-black">C</div>
+            <div>
+                <span class="text-lg font-black text-indigo-900 leading-none block tracking-tight">Career Link</span>
+                <span class="text-[11px] text-slate-400 font-bold">10/30 求人紹介会</span>
+            </div>
+        </a>
+        <div class="flex gap-2">
+            <a href="autumn.html" class="hidden sm:inline-block text-sm font-bold text-orange-700 px-4 py-2 rounded-full bg-orange-50 border border-orange-200">🍂 個社説明会</a>
+            <a href="index.html" class="text-xs sm:text-sm font-bold text-indigo-600 px-4 py-2 rounded-full bg-indigo-50 border border-indigo-100">掲示板トップへ</a>
+        </div>
+    </div>
+</nav>
+
+<main class="max-w-5xl mx-auto px-4 pb-24">
+
+    <!-- ヒーロー -->
+    <section class="pt-6 sm:pt-10 pb-6">
+        <div class="hero-band relative overflow-hidden rounded-[32px] sm:rounded-[40px] text-white p-6 sm:p-12 shadow-xl">
+            <div class="relative grid md:grid-cols-[1fr_auto] gap-8 items-center">
+                <div>
+                    <div class="flex items-center gap-3 mb-5">
+                        <span class="stamp inline-flex items-center justify-center w-20 h-20 rounded-full bg-white/95 text-[13px] font-black leading-tight text-center">この日<br>だけ</span>
+                        <p class="text-indigo-200 text-sm font-black">個社説明会と同じ時間に、別の部屋で</p>
+                    </div>
+                    <h1 class="text-[26px] sm:text-5xl font-black leading-[1.35] tracking-tight">
+                        説明会に来ない会社の<br>求人も、この日なら見られる。
+                    </h1>
+                    <p class="mt-5 text-indigo-100 font-bold leading-relaxed max-w-xl">
+                        10月30日の午後、ベネッセi-キャリアの担当者が、まだ募集中の2027卒の求人票をまとめて持ってきてくれます。事務系の総合職を中心に10社。求人票を手に取って、その場で質問できます。
+                    </p>
+                    <div class="mt-7 flex flex-wrap gap-3">
+                        <a href="#match" class="bg-orange-500 hover:bg-orange-400 text-white font-black px-7 py-4 rounded-2xl shadow-lg">自分に合いそうな会社を探す</a>
+                        <a href="#list" class="bg-white/10 hover:bg-white/20 text-white font-black px-6 py-4 rounded-2xl border border-white/25">10社を見る</a>
+                    </div>
+                </div>
+                <div class="ticket hidden md:flex rounded-[28px] text-slate-800 shadow-2xl w-72 overflow-hidden">
+                    <div class="flex-1 p-6">
+                        <p class="text-[11px] font-black text-orange-600 mb-1">求人紹介会</p>
+                        <p class="text-4xl font-black text-indigo-900 leading-none">10/30</p>
+                        <p class="text-sm font-bold text-slate-400 mt-1">金曜日 13:00〜16:10</p>
+                        <p class="text-xs font-bold text-slate-600 mt-4 leading-relaxed">会場：<span class="js-room"></span><br>出入り自由・予約不要</p>
+                    </div>
+                    <div class="ticket-perf w-16 flex items-center justify-center bg-indigo-50">
+                        <span class="text-center text-indigo-600 font-black leading-tight"><span id="left-pre" class="block text-[11px]">あと</span><span id="left" class="block text-3xl"></span><span id="left-post" class="block text-[11px]">日</span></span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- スマホ用の開催情報 -->
+        <div class="md:hidden mt-4 bg-white rounded-3xl border border-slate-100 p-5 flex items-center justify-between">
+            <div>
+                <p class="text-2xl font-black text-indigo-900">10/30（金）</p>
+                <p class="text-sm font-bold text-slate-500">13:00〜16:10　会場：<span class="js-room"></span></p>
+            </div>
+            <p id="left-sp" class="text-sm font-black text-orange-600 text-right"></p>
+        </div>
+    </section>
+
+    <!-- 当日の回り方 -->
+    <section class="mb-10">
+        <h2 class="text-xl font-black text-slate-900 mb-4 px-1">当日の回り方</h2>
+        <ol class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <li class="bg-white rounded-[28px] border border-slate-100 p-6">
+                <p class="text-3xl font-black text-indigo-200 mb-2">1</p>
+                <h3 class="font-black text-slate-900 mb-1">このページで印をつける</h3>
+                <p class="text-sm font-bold text-slate-500 leading-relaxed">下の「探す」で気になる会社を2〜3社しぼっておくと、当日迷いません。</p>
+            </li>
+            <li class="bg-white rounded-[28px] border border-slate-100 p-6">
+                <p class="text-3xl font-black text-indigo-200 mb-2">2</p>
+                <h3 class="font-black text-slate-900 mb-1">会場で求人票を見て聞く</h3>
+                <p class="text-sm font-bold text-slate-500 leading-relaxed">個社説明会の合間でも大丈夫。担当者に「どんな人が合いますか」と聞いてみましょう。</p>
+            </li>
+            <li class="bg-white rounded-[28px] border border-orange-200 p-6">
+                <p class="text-3xl font-black text-orange-200 mb-2">3</p>
+                <h3 class="font-black text-slate-900 mb-1">キャリア支援課で相談</h3>
+                <p class="text-sm font-bold text-slate-500 leading-relaxed">応募するか迷ったら、そのまま相談に。ESや面接の準備も一緒にできます。</p>
+            </li>
+        </ol>
+    </section>
+
+    <!-- 探す -->
+    <section id="match" class="mb-10 bg-white rounded-[32px] border border-slate-200 p-6 sm:p-8">
+        <h2 class="text-xl font-black text-slate-900 mb-1">自分に当てはまるものを選んでみよう</h2>
+        <p class="text-sm font-bold text-slate-500 mb-5">選ぶほど、合いそうな会社がオレンジに光って上に並びます。いくつ選んでもOKです。</p>
+        <div id="chips" class="flex flex-wrap gap-2"></div>
+        <p id="match-result" class="mt-4 text-sm font-black text-orange-600 min-h-[1.25rem]" aria-live="polite"></p>
+    </section>
+
+    <!-- 10社 -->
+    <section id="list" class="mb-12">
+        <div class="flex items-end justify-between mb-4 px-1">
+            <h2 class="text-xl font-black text-slate-900">当日持ってきてくれる10社</h2>
+            <p class="text-xs font-bold text-slate-400">2027年3月卒業予定の人が対象です</p>
+        </div>
+        <div id="cards" class="grid grid-cols-1 md:grid-cols-2 gap-5"></div>
+    </section>
+
+    <!-- 相談員から -->
+    <section class="mb-10">
+        <div class="teacher-bubble p-6 sm:p-8 rounded-[32px] shadow-sm">
+            <h2 class="text-lg font-black text-indigo-600 mb-3">💬 キャリア支援課の相談員から</h2>
+            <p class="text-slate-700 font-bold leading-relaxed">
+                ナビサイトで見つけにくい、堅実な会社の事務系の求人が並びます。給料や休みの数字だけで決めずに、「自分はどこで、どんな人と働きたいか」を思い浮かべながら見てみてください。転勤があるかないか、それだけでも選び方は大きく変わります。気になる会社があったら、求人票の内容を一緒に読み解きましょう。
+            </p>
+        </div>
+    </section>
+
+    <p class="text-xs font-bold text-slate-400 leading-relaxed px-1">
+        掲載内容は当日の求人票をもとに相談員がまとめたものです。応募の際は、会場で求人票の最新の内容を必ず確かめてください。
+    </p>
+</main>
+
+<script>
+// ▼ 会場が決まったらここに入れる（例：'243B教室'）。空のままなら「キャリア支援課で確認」と出ます
+const ROOM = '';
+const EVENT_DATE = '2026-10-30';
+
+const CHIPS = [
+    { id:'stay',    label:'転勤はしたくない' },
+    { id:'nation',  label:'全国どこでも行ける' },
+    { id:'tama',    label:'多摩の近くで働きたい' },
+    { id:'kanagawa',label:'神奈川に住んでいる' },
+    { id:'holiday', label:'休みの多さを重視' },
+    { id:'talk',    label:'人と話す事務がいい' },
+    { id:'boki',    label:'簿記の勉強をしている' },
+    { id:'loan',    label:'奨学金を返す予定' },
+    { id:'test',    label:'筆記試験が不安' },
+    { id:'lead',    label:'人をまとめるのが得意' },
+];
+
+const CO = [
+    { name:'ダイセル物流株式会社', cate:'その他（物流）', css:'cate-other', url:'http://www.daicel-butsuryu.co.jp/',
+      job:'総合職（運営・企画）', place:'全国（最初の1年は広島で研修）',
+      push:'東証プライム上場ダイセルの100％子会社。月給31万円、賞与平均124万円、家賃8割補助と、待遇の厚さは10社の中でも目立ちます。研修も約11か月と手厚い。',
+      fit:'全国どこでも経験を積みたい人。部活やバイトで人をまとめた経験がある人。',
+      care:'3〜5年ごとに全国転勤があります。',
+      keys:['nation','holiday','lead'] },
+    { name:'株式会社JM', cate:'建設・インフラ系', css:'cate-construction', url:'https://www.matabee.com/',
+      job:'総合職（施設管理・企画提案）', place:'本社（飯田橋）または全国のサービスセンター',
+      push:'インフロニアHDのグループ会社。コンビニやカフェなど身近な店舗の建物を裏から支えます。原則希望の勤務地に配属、32歳まで勤務地手当4〜8万円。',
+      fit:'地域やまちに役立つ仕事がしたい人。資格を取って手に職をつけたい人。',
+      care:'事務ではなく、設備管理・修繕寄りの総合職です。',
+      keys:['nation','holiday','lead'] },
+    { name:'京王自動車株式会社', cate:'その他（交通）', css:'cate-other', url:'https://www.keiotaxi.co.jp/',
+      job:'総合職（本社・営業所）', place:'都内の事業所（転居を伴う転勤なし）',
+      push:'本社は多摩市関戸、大学のすぐ近くです。京王グループで、ドライバーとしての配属はありません。多摩地域の交通を支える幹部候補。',
+      fit:'多摩地域で長く働きたい人。安全や人の管理に関心がある人。',
+      care:'普通免許が必須。年間休日104日で、営業所は宿直勤務（9時〜翌9時）があります。',
+      keys:['stay','tama','talk','lead'] },
+    { name:'株式会社岳南ホールディングス', cate:'建設・インフラ系', css:'cate-construction', url:'https://www.gakunan.jp/',
+      job:'総合職（経理・人事・経営企画）', place:'築地（転勤なし）',
+      push:'創業100年超の企業グループの持株会社。残業は月5時間程度、賞与4か月、年間休日125日。選考に筆記試験がありません。',
+      fit:'経営に近い場所で管理部門の仕事を覚えたい人。SPIが苦手な人にもチャンスがあります。',
+      care:'1年目は経理が中心。簿記の知識はなくても大丈夫です。',
+      keys:['stay','holiday','boki','test'] },
+    { name:'ディクスホールディングス株式会社', cate:'IT・ソフトウェア', css:'cate-it', url:'https://dicshd.co.jp/',
+      job:'コーポレート総合職', place:'品川（転勤なし）',
+      push:'IT企業グループの持株会社。経理・労務から始めて、人事や経営企画まで経験できます。年間休日125日、完全週休2日。',
+      fit:'数字や正確な作業が得意な人。簿記やMOSを持っている人、人事労務に関心がある人。',
+      care:'月給に固定残業代15時間分が含まれています。',
+      keys:['stay','holiday','boki'] },
+    { name:'株式会社エスシー・マシーナリ', cate:'リース（建設機械）', css:'cate-lease', url:'https://www.sc-m.jp/',
+      job:'事務系総合職', place:'横浜・瀬谷の本社（全国転勤の可能性あり）',
+      push:'清水建設グループで、37年間黒字・無借金。年間休日130日は10社で最多、毎週水曜はノー残業デー、賞与は平均4か月分。',
+      fit:'神奈川に住んでいる人。大きな工事を裏方でコツコツ支えたい人。',
+      care:'本社は瀬谷駅から送迎バス。将来、全国の拠点への転勤の可能性があります（応相談）。',
+      keys:['kanagawa','holiday','nation'] },
+    { name:'株式会社アベコー', cate:'商社（建設資材）', css:'cate-shosha', url:'http://www.abeco.jp/',
+      job:'営業事務職', place:'東京・神奈川の営業所',
+      push:'「建設資材のコンビニ」と呼ばれる専門商社。社員80名、平均年齢35歳で、先輩に気軽に相談できる風通しのよさが自慢です。',
+      fit:'電話応対など、人と話す事務がしたい人。少人数のチームで働きたい人。',
+      care:'月給24万円に業務手当・住宅手当・固定残業代11時間分が含まれています。',
+      keys:['kanagawa','holiday','talk'] },
+    { name:'株式会社タカギコネクト', cate:'商社（技術商社）', css:'cate-shosha', url:'https://www.takagi-c.com',
+      job:'内勤営業職（営業のパートナー事務）', place:'東京・神奈川・京都の拠点',
+      push:'立花エレテック（東証プライム）グループの技術商社。平均勤続19.5年、年間休日128日。1年間、先輩がマンツーマンで教えてくれます。',
+      fit:'事務でも人と関わりたい人。気配りや先回り、報連相ができる人。',
+      care:'面接は3回あります。',
+      keys:['kanagawa','holiday','talk'] },
+    { name:'ホームネットカーズ株式会社', cate:'IT・ソフトウェア', css:'cate-it', url:'https://www.homenetcars.co.jp/',
+      job:'事務系総合職', place:'早稲田（転勤なし）',
+      push:'「ニコニコレンタカー」などでガソリンスタンドを支える会社。残業は月10時間未満。奨学金返還補助（月3万円×3年）、免許取得費30万円の貸与（在籍すれば返済不要）があります。',
+      fit:'奨学金を返す予定の人、免許がまだない人。どの職種が合うか迷っている人（希望を聞いてくれます）。',
+      care:'月給はインフレ手当4万円込み。試用期間中は賞与がありません。',
+      keys:['stay','holiday','loan'] },
+    { name:'株式会社大庄', cate:'その他（外食）', css:'cate-other', url:'https://www.daisyo.co.jp/',
+      job:'経理職', place:'大森本社（転勤なし）',
+      push:'「庄や」を展開する東証スタンダード上場企業。上場企業の決算や開示の仕事に、若いうちから関われます。',
+      fit:'簿記3級を持っていて、経理の専門職を目指したい人。',
+      care:'日商簿記3級の取得が応募条件です。賞与は年1回。',
+      keys:['stay','holiday','boki'] },
+];
+
+const esc = s => String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const active = new Set();
+
+// 会場表示
+document.querySelectorAll('.js-room').forEach(el => el.textContent = ROOM || 'キャリア支援課で確認');
+
+// 残り日数
+(function () {
+    const t0 = new Date(); t0.setHours(0,0,0,0);
+    const ev = new Date(EVENT_DATE + 'T00:00:00');
+    const d = Math.round((ev - t0) / 86400000);
+    const L = document.getElementById('left'), pre = document.getElementById('left-pre'), post = document.getElementById('left-post'), sp = document.getElementById('left-sp');
+    if (d > 0) { L.textContent = d; sp.textContent = 'あと' + d + '日'; }
+    else if (d === 0) { pre.textContent = ''; L.textContent = '今日'; post.textContent = ''; L.classList.replace('text-3xl','text-xl'); sp.textContent = '今日です'; }
+    else { pre.textContent = ''; L.textContent = '終了'; post.textContent = ''; L.classList.replace('text-3xl','text-xl'); sp.textContent = '終了しました'; }
+})();
+
+function renderChips() {
+    document.getElementById('chips').innerHTML = CHIPS.map(c =>
+        `<button type="button" data-chip="${c.id}" aria-pressed="${active.has(c.id)}" class="chip text-sm font-bold px-4 py-2 rounded-full border border-slate-200 bg-white text-slate-600 hover:border-indigo-300">${esc(c.label)}</button>`
+    ).join('') + (active.size ? '<button type="button" id="chip-clear" class="text-sm font-bold px-3 py-2 text-slate-400 hover:text-indigo-600">選び直す</button>' : '');
+}
+
+function card(c, score) {
+    const lit = active.size && score > 0, dim = active.size && score === 0;
+    return `
+    <article class="slip ${lit ? 'lit' : ''} ${dim ? 'dim' : ''} bg-white rounded-[28px] border border-slate-200 p-6 pl-10 flex flex-col">
+        <div class="flex items-center gap-2 mb-2 flex-wrap">
+            <span class="${c.css} text-[11px] font-black px-2.5 py-1 rounded-full">${esc(c.cate)}</span>
+            ${lit ? `<span class="text-[11px] font-black text-white bg-orange-500 px-2.5 py-1 rounded-full">${score}つ当てはまる</span>` : ''}
+        </div>
+        <h3 class="text-lg font-black text-slate-900 leading-snug">${esc(c.name)}</h3>
+        <p class="text-xs font-bold text-slate-400 mt-1 mb-4">${esc(c.job)}　｜　${esc(c.place)}</p>
+        <div class="space-y-3 text-sm font-bold leading-relaxed flex-1">
+            <div>
+                <p class="text-[12px] font-black text-indigo-600 mb-0.5">押しのポイント</p>
+                <p class="text-slate-700">${esc(c.push)}</p>
+            </div>
+            <div class="bg-indigo-50 rounded-2xl p-3">
+                <p class="text-[12px] font-black text-indigo-700 mb-0.5">こんな学生さんに</p>
+                <p class="text-indigo-900">${esc(c.fit)}</p>
+            </div>
+            <p class="text-[13px] text-red-600">⚠ ${esc(c.care)}</p>
+        </div>
+        <a href="${esc(c.url)}" target="_blank" rel="noopener" class="mt-4 self-start text-xs font-black text-indigo-600 px-4 py-2 rounded-full bg-indigo-50 border border-indigo-100 hover:bg-indigo-100">会社のホームページ</a>
+    </article>`;
+}
+
+function render() {
+    renderChips();
+    const scored = CO.map((c, i) => ({ c, i, s: c.keys.filter(k => active.has(k)).length }));
+    if (active.size) scored.sort((a, b) => b.s - a.s || a.i - b.i);
+    document.getElementById('cards').innerHTML = scored.map(x => card(x.c, x.s)).join('');
+    const hit = scored.filter(x => x.s > 0).length;
+    document.getElementById('match-result').textContent =
+        active.size ? (hit ? `${hit}社が当てはまりました。光っている会社から当日見てみましょう。` : '当てはまる会社がありませんでした。条件を変えてみてください。') : '';
+}
+
+document.addEventListener('click', e => {
+    const b = e.target.closest('[data-chip]');
+    if (b) { const id = b.dataset.chip; active.has(id) ? active.delete(id) : active.add(id); render(); return; }
+    if (e.target.id === 'chip-clear') { active.clear(); render(); }
+});
+
+render();
+</script>
+</body>
+</html>
